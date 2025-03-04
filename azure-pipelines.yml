@@ -6,7 +6,7 @@ trigger:
         - public
         
 variables:
-    pluginName: 'mte-relay-client-flutter'
+    packageName: 'mte-relay-client-flutter'
     relayDirectory: '$(Build.Repository.LocalPath)'
 
 
