@@ -26,7 +26,7 @@ samples, guidance on mobile development, and a full API reference.
 <br><br>
 ## Add MteRelay Client Flutter Plugin to your application:
 - Confirm set-up of corresponding MteRelay API to receive the requests from your application, where they will be decoded and relayed on to the original destination API.
-- Add this [Mte-Relay-Client-Flutter](https://github.com/Eclypses/mte_relay_client_flutter.git) -  [HowTo](https://docs.flutter.dev/packages-and-plugins/using-packages). 
+- Add this [Mte-Relay-Client-Flutter](https://github.com/Eclypses/mte-relay-client-flutter.git) -  [HowTo](https://docs.flutter.dev/packages-and-plugins/using-packages). 
   - Currently, this MteRelay Client Flutter Plugin is not published on pub.dev so add this plugin by editing your pubspec.yaml file as shown here. (Indenting is critical!)
 ``` dart
 dependencies:
@@ -34,7 +34,7 @@ dependencies:
         sdk: flutter
     mte_relay_client_plugin:
         git:
-            url: https://github.com/Eclypses/mte_relay_client_flutter.git
+            url: https://github.com/Eclypses/mte-relay-client-flutter.git
 ```
 - In a terminal at the root directory of the project, run Flutter pub get. This should install the MteRelay Client Plugin to your project. 
 - In the file where you expect to maintain the reference to the MteRelay plugin, import it. 
