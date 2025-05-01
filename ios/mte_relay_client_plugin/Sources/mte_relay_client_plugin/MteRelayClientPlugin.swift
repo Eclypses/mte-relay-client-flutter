@@ -28,10 +28,10 @@ import MteRelay
 
 public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegate, RelayStreamDelegate, RelayStreamResponseDelegate, RelayStreamCompletionDelegate {
     
+    
     // MARK:  Class Variables
     var streamingResult: FlutterResult!
     var outputStreams: [String: OutputStream] = [:]
-    var count: Int = 0
     private var methodChannel: FlutterMethodChannel?
     private static let channelName = "mte_relay_client_plugin"
     private var relay: Relay!
@@ -46,7 +46,7 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
     
     // MARK: RelayDelegates
 
-    public func relayStreamResponse(data: Data?, response: URLResponse?, error: Error?) {
+    public func relayStreamResponse(from relayServerUrl: String, data: Data?, response: URLResponse?, error: Error?) {
 
         var pluginError: String? = nil
         guard let relayResponse = response as? HTTPURLResponse else {
@@ -85,13 +85,12 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
     }
     
     // Get requestBodySgtream from Flutter
-    public func getRequestBodyStream(outputStream: OutputStream) -> Int {
+    public func getRequestBodyStream(outputStream: OutputStream) {
         let streamID = UUID().uuidString
         outputStreams[streamID] = outputStream
         DispatchQueue.main.async {
             self.methodChannel?.invokeMethod("getFileStream", arguments: streamID)
         }
-        return count
     }
     
     public func relayResponse(success: Bool, responseStr: String, errorMessage: String?) {
@@ -100,7 +99,7 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
         }
     }
     
-    public func streamCompletionPercentage(bytesCompleted: Double, totalBytes: Double) {
+    public func streamCompletionPercentage(from relayServerUrl: String, bytesCompleted: Double, totalBytes: Double) {
         let streamCompletionPercentage = (bytesCompleted/totalBytes)
         DispatchQueue.main.async {
             self.methodChannel?.invokeMethod("streamCompletionPercentage", arguments: streamCompletionPercentage);
@@ -183,6 +182,8 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
                                    _ result: @escaping FlutterResult) {
         guard let urlString = args["url"] as? String,
               let url = URL(string: urlString),
+              let pathnamePrefix = args["pathnamePrefix"] as? String,
+              var route = args["route"] as? String,
               let method = args["method"] as? String,
               let headers = args["headers"] as? [String: String],
               let headersToEncrypt = args["headersToEncrypt"] as? [String] else {
@@ -190,12 +191,16 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
             return
         }
         
-        // Safely handle `body` as optional
+        // Safely handle `body` separately as it is optional
         let body = args["body"] as? String
         
-        var request = URLRequest(url: url)
+        if !route.hasPrefix("/") {
+            route = "/" + route
+        }
+        var request = URLRequest(url: url.appendingPathComponent(route))
         request.httpMethod = method
         request.allHTTPHeaderFields = headers
+        
         
         // Set `httpBody` only if `body` exists and is non-empty
         if let body = body, !body.isEmpty {
@@ -212,6 +217,7 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
         Task {
             await relay.dataTask(with: request,
                                  headersToEncrypt: headersToEncrypt,
+                                 pathnamePrefix: pathnamePrefix,
                                  completionHandler: { (data, response, error) in
                 
                 guard let relayResponse = response as? HTTPURLResponse else {
@@ -242,17 +248,22 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
                                            _ result: @escaping FlutterResult) {
         guard let urlString = args["url"] as? String,
               let url = URL(string: urlString),
+              let pathnamePrefix = args["pathnamePrefix"] as? String,
+              var route = args["route"] as? String,
               let method = args["method"] as? String,
               let headers = args["headers"] as? [String: String],
               let headersToEncrypt = args["headersToEncrypt"] as? [String] else {
             result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
             return
         }
-        var request = URLRequest(url: url)
+        if !route.hasPrefix("/") {
+            route = "/" + route
+        }
+        var request = URLRequest(url: url.appendingPathComponent(route))
         request.httpMethod = method
         request.allHTTPHeaderFields = headers
         Task {
-            try relay.uploadFileStream(request: request, headersToEncrypt: headersToEncrypt)
+            try relay.uploadFileStream(request: request, headersToEncrypt: headersToEncrypt, pathnamePrefix: pathnamePrefix)
         }
     }
     
@@ -260,6 +271,8 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
                                              _ result: @escaping FlutterResult) {
         guard let urlString = args["url"] as? String,
               let url = URL(string: urlString),
+              let pathnamePrefix = args["pathnamePrefix"] as? String,
+              var route = args["route"] as? String,
               let method = args["method"] as? String,
               let headers = args["headers"] as? [String: String],
               let headersToEncrypt = args["headersToEncrypt"] as? [String],
@@ -267,7 +280,10 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
             result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
             return
         }
-        var request = URLRequest(url: url)
+        if !route.hasPrefix("/") {
+            route = "/" + route
+        }
+        var request = URLRequest(url: url.appendingPathComponent(route))
         request.httpMethod = method
         request.allHTTPHeaderFields = headers
         guard let encodedUrlString = downloadlocation.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
@@ -277,54 +293,43 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
             return
         }
         Task {
-            try relay.downloadFileStream(request: request, downloadUrl: downloadUrl, headersToEncrypt: headersToEncrypt)
+            try relay.downloadFileStream(request: request, downloadUrl: downloadUrl, headersToEncrypt: headersToEncrypt, pathnamePrefix: pathnamePrefix)
         }
     }
     
     fileprivate func rePair(_ args: [String: Any],
                             _ result: @escaping FlutterResult) {
-        print(args);
         guard let urlString = args["url"] as? String,
-              let _ = URL(string: urlString) else {
+              let _ = URL(string: urlString),
+              let pathnamePrefix = args["pathnamePrefix"] as? String else {
             result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
             return
         }
         Task {
-            try await relay.rePairMte(relayServerUrlString: urlString) { success in
-                Task {
-                    if success == true {
-                        result("Successfully Re-Paired with \(urlString)")
-                    } else {
-                        result(FlutterError(code: "Re-Pair Failed", message: "Unable to re-pair with \(urlString)", details: nil))
-                    }
-                }
+            try await relay.rePairwithRelayServer(relayServerUrlString: urlString, pathnamePrefix: pathnamePrefix)
             }
         }
-    }
+    
     
     fileprivate func adjustRelaySettings(_ args: [String: Any],
                                          _ result: @escaping FlutterResult) {
         var responseMessage = ""
         do {
-            if let newStreamChunkSize = args["streamChunkSize"] as? Int,
-               newStreamChunkSize != relay.getStreamChunkSizeSetting() {
-                try relay.setStreamChunkSize(newStreamChunkSize)
-                responseMessage = responseMessage + "\nRelaySetting.streamChunkSize adjusted to \(newStreamChunkSize) "
+            guard let urlString = args["url"] as? String,
+                  let _ = URL(string: urlString),
+                  let pathnamePrefix = args["pathnamePrefix"] as? String,
+                  let newStreamChunkSize = args["streamChunkSize"] as? Int,
+                  let newPairPoolSize = args["pairPoolSize"] as? Int,
+                  let persistPairs = args["persistPairs"] as? Bool else {
+                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
+                return
             }
-            if let newPairPoolSize = args["pairPoolSize"] as? Int,
-               newPairPoolSize != relay.getPairPoolSizeSetting() {
-                try relay.setPairPoolSize(newPairPoolSize)
-                responseMessage = responseMessage + "\nRelaySetting.pairPoolSize adjusted to \(newPairPoolSize) "
-            }
-            if let persistPairs = args["persistPairs"] as? Bool,
-               persistPairs != relay.getPersistPairsSetting() {
-                try relay.setPersistPairs(persistPairs)
-                responseMessage = responseMessage + "/nRelaySetting.persistPairs adjusted to \(persistPairs) "
-            }
-            if !responseMessage.isEmpty {
-                result(responseMessage)
-            } else {
-                result("No Relay Settings were changed based on arguments and existing RelaySettings")
+            Task {
+                try await relay.adjustRelaySettings(serverUrl: urlString,
+                                                       pathnamePrefix: pathnamePrefix,
+                                                       newStreamChunkSize: newStreamChunkSize,
+                                                       newPairPoolSize: newPairPoolSize,
+                                                       persistPairs: persistPairs)
             }
         } catch {
             result("Adjust RelaySettings Failed")
