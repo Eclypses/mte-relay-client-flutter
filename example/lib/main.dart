@@ -25,9 +25,9 @@
 import 'dart:convert';
 
 // IMPORTANT *********************************************************************
-// This example application is currently set to access an Eclypses demo api to 
-// demonstrate the plugin. Upon startup, the application performs a network call 
-// to the 'echo' route to confirm the API is running. 
+// This example application is currently set to access an Eclypses demo api to
+// demonstrate the plugin. Upon startup, the application performs a network call
+// to the 'echo' route to confirm the API is running.
 // *******************************************************************************
 
 import 'dart:io';
@@ -72,6 +72,8 @@ class _MyAppState extends State<MyApp> {
   Timer? _hideResultTimer;
   final displayResultTimeout = 3;
   bool relayUrlIsSet = false;
+  String? pathnamePrefix = "plain-text-prefix";
+  // String? pathnamePrefix = null;
 
   @override
   void initState() {
@@ -161,11 +163,13 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> login() async {
-    String urlWithPath = "$relayServerUrl/api/login";
+    // String urlWithPath = "$relayServerUrl/api/login";
     final body = jsonEncode({"email": "jHalpert.com", "password": "P@ssw0rd!"});
     try {
       final dynamic args = {
-        'url': urlWithPath,
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+        'route': "/api/login",
         'method': 'POST',
         'headers': {'Content-Type': 'application/json'},
         'headersToEncrypt': headersToEncrypt,
@@ -195,10 +199,12 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> getPatients() async {
-    String urlWithPath = "$relayServerUrl/api/patients";
+    // String urlWithPath = "$relayServerUrl/api/patients";
     try {
       final dynamic args = {
-        'url': urlWithPath,
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+        'route': "/api/patients",
         'method': 'GET',
         'headers': {'Content-Type': 'application/json'},
         'headersToEncrypt': headersToEncrypt,
@@ -216,7 +222,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> kyc() async {
-    String urlWithPath = "$relayServerUrl/api/kyc";
+    // String urlWithPath = "$relayServerUrl/api/kyc";
 
     final boundary = 'Boundary-${DateTime.now().millisecondsSinceEpoch}';
     final body = BytesBuilder();
@@ -269,7 +275,9 @@ class _MyAppState extends State<MyApp> {
     // Send to relay
     try {
       final dynamic args = {
-        'url': urlWithPath,
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+        'route': "/api/kyc",
         'method': 'POST',
         'headers': {'Content-Type': 'multipart/form-data; boundary=$boundary'},
         'headersToEncrypt': headersToEncrypt,
@@ -292,28 +300,24 @@ class _MyAppState extends State<MyApp> {
     file = await getFileToUpload(filesize);
     String filename = file.path.split(Platform.pathSeparator).last;
 
-    String urlWithPath = "$relayServerUrl/api/files/upload";
-    final uri = Uri.parse(urlWithPath);
-
     builder = MultipartHelper(filename);
 
-    final httpClientRequest = await HttpClient().postUrl(uri);
-
-    // Set required headers
-    httpClientRequest.headers.set(
-      HttpHeaders.contentTypeHeader,
-      'multipart/form-data; boundary=${builder.boundary}',
-    );
+    String contentTypeHeader =
+        'multipart/form-data; boundary=${builder.boundary}';
     int contentLength = await builder.calculateContentLength(file);
-    httpClientRequest.headers.set(
-      HttpHeaders.contentLengthHeader,
-      contentLength.toString(),
-    );
 
-    final args = await convertHttpRequestToMap(
-      httpClientRequest,
-      headersToEncrypt,
-    );
+    final dynamic args = {
+      'url': relayServerUrl,
+      'pathnamePrefix': pathnamePrefix,
+      'route': "/api/files/upload",
+      'method': 'POST',
+      'headers': {
+        'Content-Type': contentTypeHeader,
+        'Content-Length': contentLength.toString(),
+      },
+      'headersToEncrypt': headersToEncrypt,
+    };
+
     String result = await _mteRelayClientPlugin.relayUploadFile(args);
     _showResult(true, result);
   }
@@ -321,12 +325,12 @@ class _MyAppState extends State<MyApp> {
   Future<void> downloadFileStream() async {
     final urlEncodedFilename = Uri.encodeComponent(lastUpload);
     final downloadLocation = await getDownloadUrl(lastUpload);
-    print("Download Location:\n$downloadLocation");
-    String urlWithPath =
-        "$relayServerUrl/api/files/download/stream/$urlEncodedFilename";
+
     try {
       final arguments = {
-        'url': urlWithPath,
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+        'route': "/api/files/download/stream/$urlEncodedFilename",
         'method': 'GET',
         'headers': {'Content-Type': 'application/json'},
         'headersToEncrypt': headersToEncrypt,
@@ -342,7 +346,10 @@ class _MyAppState extends State<MyApp> {
   Future<void> rePair() async {
     String result = "";
     try {
-      final dynamic args = {'url': relayServerUrl};
+      final dynamic args = {
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+      };
       result = await _mteRelayClientPlugin.rePair(args);
 
       _showResult(true, result);
@@ -356,8 +363,9 @@ class _MyAppState extends State<MyApp> {
     try {
       final dynamic args = {
         // Any argument not included or that is the same as the existing RelaySetting is disregarded
-        'serverUrl': relayServerUrl,
-        'streamChunkSize': 1024 * 512, // current default is 1024 * 1024
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+        'streamChunkSize': 1024 * 1024, // current default is 1024 * 1024
         'pairPoolSize': 5, // current default is 3
         'persistPairs': false, // current default is false
       };
@@ -465,32 +473,9 @@ class _MyAppState extends State<MyApp> {
     _mteRelayClientPlugin.closeStream(args);
   }
 
-  Future<Map<String, dynamic>> convertHttpRequestToMap(
-    HttpClientRequest request,
-    List<String> headersToEncrypt,
-  ) async {
-    // Get headers as a Map
-    final headers = <String, String>{};
-    request.headers.forEach((name, values) {
-      headers[name] = values.join(',');
-    });
-
-    // Extract other properties
-    final map = {
-      'url': request.uri.toString(),
-      'method': request.method,
-      'headers': headers,
-      'headersToEncrypt': headersToEncrypt,
-    };
-    return map;
-  }
-
   Future<String> getDownloadUrl(String filename) async {
     // Retrieve the documents directory
-    final Directory? docsDir = await getApplicationDocumentsDirectory();
-    if (docsDir == null) {
-      throw Exception("Unable to retrieve local documents directory");
-    }
+    final Directory docsDir = await getApplicationDocumentsDirectory();
 
     // Construct the file URL
     final Directory downloadDirectory = Directory('${docsDir.path}/downloads');
@@ -536,6 +521,8 @@ class _MyAppState extends State<MyApp> {
     }
     return headers;
   }
+
+  String? _statusText;
 
   @override
   Widget build(BuildContext context) {
@@ -644,120 +631,135 @@ class _MyAppState extends State<MyApp> {
                         ),
                       ],
                     ),
+
                     SizedBox(height: 10),
                     _progress == 0.0
-                        ? Container(
-                          color: Color(0xFFF6531E),
-                          width: double.infinity,
-                          child: const Align(
-                            alignment: Alignment.center,
-                            child: Text(
-                              'File Streaming Calls',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        )
-                        : const Text(
-                          'Uploading ...',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFFF6531E),
-                          ),
-                        ),
-                    _progress != 0.0
-                        ? Column(
-                          children: [
-                            LinearProgressIndicator(
-                              value: _progress, // Set progress value
-                              minHeight: 10.0,
-                              backgroundColor: Colors.grey[300],
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xFFF6531E),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            // Display progress percentage
-                            Text(
-                              "${(_progress * 100).toStringAsFixed(1)}%", // Show percentage
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFF6531E),
-                              ),
-                            ),
-                          ],
-                        )
-                        : const SizedBox.shrink(), // Return an empty widget when _progress is 0.0
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () async {
-                            await uploadFileStream('small');
-                          },
-                          child: const Text(
-                            "1kb",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFF6531E),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        ElevatedButton(
-                          onPressed: () async {
-                            await uploadFileStream('medium');
-                          },
-                          child: const Text(
-                            "17mb",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFF6531E),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        ElevatedButton(
-                          onPressed: () async {
-                            await uploadFileStream('large');
-                          },
-                          child: const Text(
-                            "100mb",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFF6531E),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () async {
-                            await downloadFileStream();
-                          },
-                          child: const Text(
-                            "Download Last",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFF6531E),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+    ? Container(
+        color: Color(0xFFF6531E),
+        width: double.infinity,
+        child: const Align(
+          alignment: Alignment.center,
+          child: Text(
+            'File Streaming Calls',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      )
+    : (_progress > 0.0 && _progress < 1.0 && _statusText != null)
+        ? Text(
+            _statusText!,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFFF6531E),
+            ),
+          )
+        : SizedBox.shrink(), // Hide text when upload/download is done
+
+// Show progress bar only if progress is greater than 0.0 and less than 1.0
+_progress > 0.0 && _progress < 1.0
+    ? Column(
+        children: [
+          LinearProgressIndicator(
+            value: _progress,
+            minHeight: 10.0,
+            backgroundColor: Colors.grey[300],
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF6531E)),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            "${(_progress * 100).toStringAsFixed(1)}%",
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFFF6531E),
+            ),
+          ),
+        ],
+      )
+    : SizedBox.shrink(),
+
+const SizedBox(height: 16),
+
+// Upload Buttons
+Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    ElevatedButton(
+      onPressed: () async {
+        setState(() => _statusText = "Uploading ...");
+        await uploadFileStream('small');
+        setState(() => _statusText = null); // Reset when done
+      },
+      child: const Text(
+        "1kb",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFFF6531E),
+        ),
+      ),
+    ),
+    const SizedBox(width: 16),
+    ElevatedButton(
+      onPressed: () async {
+        setState(() => _statusText = "Uploading ...");
+        await uploadFileStream('medium');
+        setState(() => _statusText = null);
+      },
+      child: const Text(
+        "17mb",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFFF6531E),
+        ),
+      ),
+    ),
+    const SizedBox(width: 16),
+    ElevatedButton(
+      onPressed: () async {
+        setState(() => _statusText = "Uploading ...");
+        await uploadFileStream('large');
+        setState(() => _statusText = null);
+      },
+      child: const Text(
+        "100mb",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFFF6531E),
+        ),
+      ),
+    ),
+  ],
+),
+
+// Download Button
+Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    ElevatedButton(
+      onPressed: () async {
+        setState(() => _statusText = "Downloading ...");
+        await downloadFileStream();
+        setState(() => _statusText = null); // Reset when done
+      },
+      child: const Text(
+        "Download Last",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFFF6531E),
+        ),
+      ),
+    ),
+  ],
+),
                     Container(
                       color: Color(0xFFF6531E),
                       width: double.infinity,
