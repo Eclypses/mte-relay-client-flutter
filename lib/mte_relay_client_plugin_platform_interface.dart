@@ -81,4 +81,16 @@ abstract class MteRelayClientPluginPlatform extends PlatformInterface {
   Future<void> closeStream(dynamic args) async {
     throw UnimplementedError('closeStream() has not been implemented.');
   }
+
+  Future<void> enableFileLogging(dynamic args) async {
+    throw UnimplementedError('enableFileLogging() has not been implemented.');
+  }
+
+  Future<String> readLogFile(dynamic args) async {
+    throw UnimplementedError('readLogFile() has not been implemented.');
+  }
+
+  Future<void> clearLogFile(dynamic args) async {
+    throw UnimplementedError('clearLogFile() has not been implemented.');
+  }
 }

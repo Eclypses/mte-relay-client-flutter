@@ -13,7 +13,7 @@ let package = Package(
                  targets: ["mte_relay_client_plugin"])
     ],
     dependencies: [
-       .package(url: "https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios.git", from: "4.3.2")
+       .package(url: "https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios.git", from: "4.3.3")
           ],
     targets: [
         .target(
