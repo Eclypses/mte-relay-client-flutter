@@ -62,6 +62,7 @@ final _mteRelayClientPlugin = MteRelayClientPlugin();
 
       // Deal appropriately with response args. Here is some sample code
       bool success = args['success'] as bool;
+       int statusCode = args['statusCode'] as int;
       Uint8List? data = args['data'] as Uint8List?;
       String? relayError = args["relayError"] as String?;
       String? pluginError = args["pluginError"] as String?;
@@ -138,6 +139,10 @@ Future<void> login() async {
         );
       }
 
+      // Retrieve statusCode
+      int? statusCode = result.statusCode;
+
+      // Retrieve body data
       final dynamic jsonObject = json.decode(utf8.decode(result.data));
      // Deal appropriately with JSON Data
     } on PlatformException {
@@ -221,7 +226,7 @@ Future<void> downloadFileStream() async {
         // Any argument not included or that is the same as the existing RelaySetting is disregarded
         'serverUrl': relayServerUrl,
         'streamChunkSize': 1024 * 512, // current default is 1024 * 1024
-        'pairPoolSize': 5, // current default is 3
+        'pairPoolSize': 5, // current default is 5
         'persistPairs': false, // current default is false
       };
       result = await _mteRelayClientPlugin.adjustRelaySettings(args);
@@ -231,7 +236,52 @@ Future<void> downloadFileStream() async {
       // Deal with Exception appropriately
     }
   }
+
+  // Sample Native logging calls
+  Future<void> enableFileLogging(bool isEnabled) async {
+    String result = isEnabled ? "File Logging is enabled" : "File Logging is disabled";
+    try {
+      final dynamic args = {
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+        'isEnabled': isEnabled,
+      };
+      await _mteRelayClientPlugin.enableFileLogging(args);
+      // Deal with result appropriately
+    } catch (error) {
+      _showResult(false, "Error: $error");
+    }
+  }
+
+  Future<void> readLogFile() async {
+    String result = "No result";
+    try {
+      final dynamic args = {
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+      };
+      result = await _mteRelayClientPlugin.readLogFile(args);
+      // Deal with result appropriately
+    } catch (error) {
+      // Deal with Exception appropriately
+    }
+  }
+
+  Future<void> clearLogFile() async {
+    String result = "Log File cleared";
+    try {
+      final dynamic args = {
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+      };
+      await _mteRelayClientPlugin.clearLogFile(args);
+      // Deal with result appropriately
+    } catch (error) {
+      // Deal with Exception appropriately
+    }
+  }
 ```
+
 
 <div style="page-break-after: always; break-after: page;"></div>
 

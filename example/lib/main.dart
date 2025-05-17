@@ -72,8 +72,8 @@ class _MyAppState extends State<MyApp> {
   Timer? _hideResultTimer;
   final displayResultTimeout = 3;
   bool relayUrlIsSet = false;
-  String? pathnamePrefix = "plain-text-prefix";
-  // String? pathnamePrefix = null;
+  // String? pathnamePrefix = "plain-text-prefix";
+  String? pathnamePrefix = null;
 
   @override
   void initState() {
@@ -96,6 +96,8 @@ class _MyAppState extends State<MyApp> {
 
     _mteRelayClientPlugin.relayStreamResponseStream.listen((args) {
       bool success = args['success'] as bool;
+      int statusCode = args['statusCode'] as int;
+      print("FileStream Request StatusCode: $statusCode");
 
       Uint8List? data = args['data'] as Uint8List?;
       if (data == null) {
@@ -163,7 +165,6 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> login() async {
-    // String urlWithPath = "$relayServerUrl/api/login";
     final body = jsonEncode({"email": "jHalpert.com", "password": "P@ssw0rd!"});
     try {
       final dynamic args = {
@@ -181,6 +182,10 @@ class _MyAppState extends State<MyApp> {
       // Retrieve sample Header Value
       final headerName = "Date";
       final result = Result.fromMap(response);
+
+      int? statusCode = result.statusCode;
+      print("Login Response Status Code: $statusCode");
+      
       String? header = result.headers?[headerName];
       if (header != null && header.isNotEmpty) {
         print(
@@ -199,7 +204,6 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> getPatients() async {
-    // String urlWithPath = "$relayServerUrl/api/patients";
     try {
       final dynamic args = {
         'url': relayServerUrl,
@@ -376,6 +380,50 @@ class _MyAppState extends State<MyApp> {
       _showResult(false, "Error: $error");
     }
   }
+
+  Future<void> enableFileLogging(bool isEnabled) async {
+    String result = isEnabled ? "File Logging is enabled" : "File Logging is disabled";
+    try {
+      final dynamic args = {
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+        'isEnabled': isEnabled,
+      };
+      await _mteRelayClientPlugin.enableFileLogging(args);
+      _showResult(true, result);
+    } catch (error) {
+      _showResult(false, "Error: $error");
+    }
+  }
+
+  Future<void> readLogFile() async {
+    String result = "No result";
+    try {
+      final dynamic args = {
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+      };
+      result = await _mteRelayClientPlugin.readLogFile(args);
+      _showResult(true, result);
+    } catch (error) {
+      _showResult(false, "Error: $error");
+    }
+  }
+
+  Future<void> clearLogFile() async {
+    String result = "Log File cleared";
+    try {
+      final dynamic args = {
+        'url': relayServerUrl,
+        'pathnamePrefix': pathnamePrefix,
+      };
+      await _mteRelayClientPlugin.clearLogFile(args);
+      _showResult(true, result);
+    } catch (error) {
+      _showResult(false, "Error: $error");
+    }
+  }
+
 
   void _showResult(bool isSuccess, String result) {
     _responseTextColor = isSuccess ? Colors.green : Colors.red;
@@ -634,132 +682,139 @@ class _MyAppState extends State<MyApp> {
 
                     SizedBox(height: 10),
                     _progress == 0.0
-    ? Container(
-        color: Color(0xFFF6531E),
-        width: double.infinity,
-        child: const Align(
-          alignment: Alignment.center,
-          child: Text(
-            'File Streaming Calls',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-        ),
-      )
-    : (_progress > 0.0 && _progress < 1.0 && _statusText != null)
-        ? Text(
-            _statusText!,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFFF6531E),
-            ),
-          )
-        : SizedBox.shrink(), // Hide text when upload/download is done
+                        ? Container(
+                          color: Color(0xFFF6531E),
+                          width: double.infinity,
+                          child: const Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              'File Streaming Calls',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        )
+                        : (_progress > 0.0 &&
+                            _progress < 1.0 &&
+                            _statusText != null)
+                        ? Text(
+                          _statusText!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFFF6531E),
+                          ),
+                        )
+                        : SizedBox.shrink(), // Hide text when upload/download is done
+                    // Show progress bar only if progress is greater than 0.0 and less than 1.0
+                    _progress > 0.0 && _progress < 1.0
+                        ? Column(
+                          children: [
+                            LinearProgressIndicator(
+                              value: _progress,
+                              minHeight: 10.0,
+                              backgroundColor: Colors.grey[300],
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFFF6531E),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              "${(_progress * 100).toStringAsFixed(1)}%",
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFF6531E),
+                              ),
+                            ),
+                          ],
+                        )
+                        : SizedBox.shrink(),
 
-// Show progress bar only if progress is greater than 0.0 and less than 1.0
-_progress > 0.0 && _progress < 1.0
-    ? Column(
-        children: [
-          LinearProgressIndicator(
-            value: _progress,
-            minHeight: 10.0,
-            backgroundColor: Colors.grey[300],
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF6531E)),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            "${(_progress * 100).toStringAsFixed(1)}%",
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFFF6531E),
-            ),
-          ),
-        ],
-      )
-    : SizedBox.shrink(),
+                    const SizedBox(height: 16),
 
-const SizedBox(height: 16),
+                    // Upload Buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () async {
+                            setState(() => _statusText = "Uploading ...");
+                            await uploadFileStream('small');
+                            setState(
+                              () => _statusText = null,
+                            ); // Reset when done
+                          },
+                          child: const Text(
+                            "1kb",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFF6531E),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        ElevatedButton(
+                          onPressed: () async {
+                            setState(() => _statusText = "Uploading ...");
+                            await uploadFileStream('medium');
+                            setState(() => _statusText = null);
+                          },
+                          child: const Text(
+                            "17mb",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFF6531E),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        ElevatedButton(
+                          onPressed: () async {
+                            setState(() => _statusText = "Uploading ...");
+                            await uploadFileStream('large');
+                            setState(() => _statusText = null);
+                          },
+                          child: const Text(
+                            "100mb",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFF6531E),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
 
-// Upload Buttons
-Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    ElevatedButton(
-      onPressed: () async {
-        setState(() => _statusText = "Uploading ...");
-        await uploadFileStream('small');
-        setState(() => _statusText = null); // Reset when done
-      },
-      child: const Text(
-        "1kb",
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFF6531E),
-        ),
-      ),
-    ),
-    const SizedBox(width: 16),
-    ElevatedButton(
-      onPressed: () async {
-        setState(() => _statusText = "Uploading ...");
-        await uploadFileStream('medium');
-        setState(() => _statusText = null);
-      },
-      child: const Text(
-        "17mb",
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFF6531E),
-        ),
-      ),
-    ),
-    const SizedBox(width: 16),
-    ElevatedButton(
-      onPressed: () async {
-        setState(() => _statusText = "Uploading ...");
-        await uploadFileStream('large');
-        setState(() => _statusText = null);
-      },
-      child: const Text(
-        "100mb",
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFF6531E),
-        ),
-      ),
-    ),
-  ],
-),
-
-// Download Button
-Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    ElevatedButton(
-      onPressed: () async {
-        setState(() => _statusText = "Downloading ...");
-        await downloadFileStream();
-        setState(() => _statusText = null); // Reset when done
-      },
-      child: const Text(
-        "Download Last",
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFF6531E),
-        ),
-      ),
-    ),
-  ],
-),
+                    // Download Button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () async {
+                            setState(() => _statusText = "Downloading ...");
+                            await downloadFileStream();
+                            setState(
+                              () => _statusText = null,
+                            ); // Reset when done
+                          },
+                          child: const Text(
+                            "Download Last",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFF6531E),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     Container(
                       color: Color(0xFFF6531E),
                       width: double.infinity,
@@ -794,10 +849,10 @@ Row(
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            await adjustRelaySettings();
+                            await readLogFile();
                           },
                           child: const Text(
-                            "Adjust Settings",
+                            "Logs",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

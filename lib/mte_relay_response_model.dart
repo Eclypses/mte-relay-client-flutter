@@ -27,20 +27,29 @@ class Result<T> {
   final String? errorMessage;
   final bool isSuccess;
   final Map<String, String>? headers;
+  final int? statusCode;
 
-  Result.success(this.data, {this.headers})
+  Result.success(this.data, {this.headers, this.statusCode})
       : errorMessage = null,
         isSuccess = true;
 
-  Result.error(this.errorMessage, {this.headers})
+  Result.error(this.errorMessage, {this.headers, this.statusCode})
       : data = null,
         isSuccess = false;
 
   // Convert from a Map (native response)
   factory Result.fromMap(Map<dynamic, dynamic> map) {
     return map['success'] == true
-        ? Result.success(map['data'], headers: _parseHeaders(map['headers']))
-        : Result.error(map['error'], headers: _parseHeaders(map['headers']));
+        ? Result.success(
+            map['data'],
+            headers: _parseHeaders(map['headers']),
+            statusCode: map['statusCode'],
+          )
+        : Result.error(
+            map['error'],
+            headers: _parseHeaders(map['headers']),
+            statusCode: map['statusCode'],
+          );
   }
 
   // Convert to Map (if needed)
@@ -50,6 +59,7 @@ class Result<T> {
       'data': data,
       'error': errorMessage,
       'headers': headers,
+      'statusCode': statusCode,
     };
   }
 
