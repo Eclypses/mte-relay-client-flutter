@@ -491,15 +491,22 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
 
   private void adjustRelaySettings(Map<String, Object> args) {
     String serverUrl = null;
+    String pathnamePrefix = null;
     int newStreamChunkSize = 0;
     int newPairPoolSize = 0;
     Boolean persistPairs = false;
 
     try {
-      if (args.containsKey("serverUrl")) {
-        Object serverUrlObj = args.get("serverUrl");
+      if (args.containsKey("url")) {
+        Object serverUrlObj = args.get("url");
         if (serverUrlObj instanceof String) {
           serverUrl = (String) serverUrlObj;
+        }
+      }
+      if (args.containsKey("pathnamePrefix")) {
+        Object pathnamePrefixObj = args.get("pathnamePrefix");
+        if (pathnamePrefixObj instanceof String) {
+          pathnamePrefix = (String) pathnamePrefixObj;
         }
       }
       if (args.containsKey("streamChunkSize")) {
@@ -521,7 +528,9 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
           persistPairs = (Boolean) persistPairsObj;
         }
       }
-      String responseMessage = relay.adjustRelaySettings(serverUrl,
+      String responseMessage = relay.adjustRelaySettings(
+          serverUrl,
+          pathnamePrefix,
           newStreamChunkSize,
           newPairPoolSize,
           persistPairs);
@@ -542,6 +551,8 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
     String pathnamePrefix = (String) args.get("pathnamePrefix");
     Boolean isEnabled = (Boolean) args.get("isEnabled");
     Relay.enableFileLogging(urlString, pathnamePrefix, isEnabled);
+    String message = "Success! - File logging " + (isEnabled ? "enabled" : "disabled");
+    result.success(message);
   }
 
   private void readLogFile(Map<String, Object> args, MethodChannel.Result result) {
@@ -559,6 +570,7 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
     String urlString = (String) args.get("url");
     String pathnamePrefix = (String) args.get("pathnamePrefix");
     Relay.clearLogFile(urlString, pathnamePrefix);
+    result.success("Log File Cleared");
   }
 
   private <T> void sendToRelay(

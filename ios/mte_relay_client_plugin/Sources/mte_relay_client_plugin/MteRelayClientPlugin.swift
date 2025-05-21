@@ -428,6 +428,8 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
         }
         Task {
             try await Relay.enableFileLogging(isEnabled)
+            let message = "Success! - File logging \(isEnabled ? "enabled" : "disabled")"
+            result(message)
         }
     }
     
@@ -454,6 +456,7 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
         }
         Task {
             try await Relay.clearLogFile()
+            result("Log File Cleared")
         }
     }
     

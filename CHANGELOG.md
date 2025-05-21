@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.1] - 2025-05-21
+
+### Added
+ 
+
+### Changed
+- Updated README to correct method signatures
+- Updated Version number in pubspec.yaml
+- Various minor bug fixes
+
+### Fixed
+- Reurning 'Result' for logging methods
+
+[4.2.1]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.1
+<br><br>
+
 ## [4.2.0] - 2025-05-17
 
 ### Added

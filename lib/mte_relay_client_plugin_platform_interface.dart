@@ -82,7 +82,7 @@ abstract class MteRelayClientPluginPlatform extends PlatformInterface {
     throw UnimplementedError('closeStream() has not been implemented.');
   }
 
-  Future<void> enableFileLogging(dynamic args) async {
+  Future<String> enableFileLogging(dynamic args) async {
     throw UnimplementedError('enableFileLogging() has not been implemented.');
   }
 
@@ -90,7 +90,7 @@ abstract class MteRelayClientPluginPlatform extends PlatformInterface {
     throw UnimplementedError('readLogFile() has not been implemented.');
   }
 
-  Future<void> clearLogFile(dynamic args) async {
+  Future<String> clearLogFile(dynamic args) async {
     throw UnimplementedError('clearLogFile() has not been implemented.');
   }
 }

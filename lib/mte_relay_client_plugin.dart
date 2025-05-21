@@ -64,7 +64,7 @@ class MteRelayClientPlugin {
     return MteRelayClientPluginPlatform.instance.closeStream(args);
   }
 
-  Future<void> enableFileLogging(dynamic args) {
+  Future<String> enableFileLogging(dynamic args) {
     return MteRelayClientPluginPlatform.instance.enableFileLogging(args);
   }
 
@@ -72,7 +72,7 @@ class MteRelayClientPlugin {
     return MteRelayClientPluginPlatform.instance.readLogFile(args);
   }
 
-  Future<void> clearLogFile(dynamic args) {
+  Future<String> clearLogFile(dynamic args) {
     return MteRelayClientPluginPlatform.instance.clearLogFile(args);
   }
 
