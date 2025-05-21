@@ -74,6 +74,7 @@ class _MyAppState extends State<MyApp> {
   bool relayUrlIsSet = false;
   // String? pathnamePrefix = "plain-text-prefix";
   String? pathnamePrefix = null;
+  bool fileLoggingEnabled = false;
 
   @override
   void initState() {
@@ -185,7 +186,7 @@ class _MyAppState extends State<MyApp> {
 
       int? statusCode = result.statusCode;
       print("Login Response Status Code: $statusCode");
-      
+
       String? header = result.headers?[headerName];
       if (header != null && header.isNotEmpty) {
         print(
@@ -348,14 +349,12 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> rePair() async {
-    String result = "";
     try {
       final dynamic args = {
         'url': relayServerUrl,
         'pathnamePrefix': pathnamePrefix,
       };
-      result = await _mteRelayClientPlugin.rePair(args);
-
+      String result = await _mteRelayClientPlugin.rePair(args);
       _showResult(true, result);
     } catch (error) {
       _showResult(false, "Error: $error");
@@ -363,33 +362,35 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> adjustRelaySettings() async {
-    String result = "No result";
     try {
       final dynamic args = {
-        // Any argument not included or that is the same as the existing RelaySetting is disregarded
         'url': relayServerUrl,
         'pathnamePrefix': pathnamePrefix,
+        // Any following argument not included or that is the same as the existing RelaySetting is disregarded
         'streamChunkSize': 1024 * 1024, // current default is 1024 * 1024
-        'pairPoolSize': 5, // current default is 3
+        'pairPoolSize': 3, // current default is 3
         'persistPairs': false, // current default is false
       };
-      result = await _mteRelayClientPlugin.adjustRelaySettings(args);
-
+      String result = await _mteRelayClientPlugin.adjustRelaySettings(args);
       _showResult(true, result);
     } catch (error) {
       _showResult(false, "Error: $error");
     }
   }
 
+  void toggleFileLogging() {
+    fileLoggingEnabled = !fileLoggingEnabled;
+    enableFileLogging(fileLoggingEnabled);
+  }
+
   Future<void> enableFileLogging(bool isEnabled) async {
-    String result = isEnabled ? "File Logging is enabled" : "File Logging is disabled";
     try {
       final dynamic args = {
         'url': relayServerUrl,
         'pathnamePrefix': pathnamePrefix,
         'isEnabled': isEnabled,
       };
-      await _mteRelayClientPlugin.enableFileLogging(args);
+      String result = await _mteRelayClientPlugin.enableFileLogging(args);
       _showResult(true, result);
     } catch (error) {
       _showResult(false, "Error: $error");
@@ -397,13 +398,12 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> readLogFile() async {
-    String result = "No result";
     try {
       final dynamic args = {
         'url': relayServerUrl,
         'pathnamePrefix': pathnamePrefix,
       };
-      result = await _mteRelayClientPlugin.readLogFile(args);
+      String result = await _mteRelayClientPlugin.readLogFile(args);
       _showResult(true, result);
     } catch (error) {
       _showResult(false, "Error: $error");
@@ -411,19 +411,17 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> clearLogFile() async {
-    String result = "Log File cleared";
     try {
       final dynamic args = {
         'url': relayServerUrl,
         'pathnamePrefix': pathnamePrefix,
       };
-      await _mteRelayClientPlugin.clearLogFile(args);
+      String result = await _mteRelayClientPlugin.clearLogFile(args);
       _showResult(true, result);
     } catch (error) {
       _showResult(false, "Error: $error");
     }
   }
-
 
   void _showResult(bool isSuccess, String result) {
     _responseTextColor = isSuccess ? Colors.green : Colors.red;
@@ -661,15 +659,43 @@ class _MyAppState extends State<MyApp> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: kyc,
+                          child: const Text(
+                            "KYC",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFF6531E),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        ElevatedButton(
-                          onPressed: kyc,
+                         ElevatedButton(
+                          onPressed: () async {
+                            await rePair();
+                          },
                           child: const Text(
-                            "KYC",
+                            "Re-Pair",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFF6531E),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                         ElevatedButton(
+                          onPressed: () async {
+                            await adjustRelaySettings();
+                          },
+                          child: const Text(
+                            "Settings",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -812,7 +838,7 @@ class _MyAppState extends State<MyApp> {
                               color: Color(0xFFF6531E),
                             ),
                           ),
-                        ),
+                        ),                    
                       ],
                     ),
                     Container(
@@ -821,7 +847,7 @@ class _MyAppState extends State<MyApp> {
                       child: const Align(
                         alignment: Alignment.center,
                         child: Text(
-                          'Utility Method Calls',
+                          'File Logging Calls',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
@@ -834,12 +860,13 @@ class _MyAppState extends State<MyApp> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        
                         ElevatedButton(
                           onPressed: () async {
-                            await rePair();
+                            toggleFileLogging();
                           },
                           child: const Text(
-                            "Re-Pair",
+                            "Enable",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -849,10 +876,23 @@ class _MyAppState extends State<MyApp> {
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            await readLogFile();
+                            readLogFile();
                           },
                           child: const Text(
-                            "Logs",
+                            "Read",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFF6531E),
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            clearLogFile();
+                          },
+                          child: const Text(
+                            "Clear",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
