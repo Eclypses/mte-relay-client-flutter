@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.2] - 2025-05-21
+
+### Added
+- Added convenience getters to Result class
+- Added NativeHttpResponse class to map responses from Native code. 
+
+### Changed
+- Updated Version number in pubspec.yaml
+
+[4.2.2]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.2
+<br><br>
+
 ## [4.2.1] - 2025-05-21
 
 ### Added

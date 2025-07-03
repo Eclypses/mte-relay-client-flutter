@@ -38,6 +38,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:mte_relay_client_plugin/mte_relay_client_plugin.dart';
+import 'package:mte_relay_client_plugin/mte_relay_native_response.dart';
 import 'package:mte_relay_client_plugin/mte_relay_response_model.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -214,11 +215,37 @@ class _MyAppState extends State<MyApp> {
         'headers': {'Content-Type': 'application/json'},
         'headersToEncrypt': headersToEncrypt,
       };
-      Map<dynamic, dynamic> response = await _mteRelayClientPlugin
+      Map<dynamic, dynamic> responseMap = await _mteRelayClientPlugin
           .relayDataTask(args);
-      final result = Result.fromMap(response);
-      final dynamic jsonObject = json.decode(utf8.decode(result.data));
-      _showResult(true, JsonEncoder.withIndent('  ').convert(jsonObject));
+
+      // This is one option to handle the responseMap
+      // In this case, the body (result.data) type is 'T?'
+      final result = Result.fromMap(responseMap);
+      if (!result.isSuccess && result.errorMessage != null) {
+        _showResult(result.isSuccess, result.errorMessage!);
+      }
+
+      // If body can be converted to a string
+      // Returns an empty String if data is null or can't be converted to a String
+      final bodyString = result.bodyAsString;
+
+      // If body can be converted to a Json Object. Returns null if it can't be converted.
+      final bodyJson = result.bodyAsJsonObject;
+
+      // This is the second option to handle the responseMap
+      // In this case, the body (result.data) type is Uint8List?
+      final nativeResponse = NativeHttpResponse.fromMap(responseMap);
+
+      // If body can be converted to a string
+      // Returns an empty String if data is null or can't be converted to a String
+      final dataString = nativeResponse.bodyAsString;
+
+      // If body can be converted to a Json Object. Returns null if it can't be converted.
+      final dataJson = nativeResponse.bodyAsJsonObject;
+
+
+
+      _showResult(true, JsonEncoder.withIndent('  ').convert(dataJson));
     } on PlatformException {
       _showResult(false, 'Failed to getPatients with Relay.');
     } catch (error) {
@@ -676,7 +703,7 @@ class _MyAppState extends State<MyApp> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                         ElevatedButton(
+                        ElevatedButton(
                           onPressed: () async {
                             await rePair();
                           },
@@ -690,7 +717,7 @@ class _MyAppState extends State<MyApp> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                         ElevatedButton(
+                        ElevatedButton(
                           onPressed: () async {
                             await adjustRelaySettings();
                           },
@@ -838,7 +865,7 @@ class _MyAppState extends State<MyApp> {
                               color: Color(0xFFF6531E),
                             ),
                           ),
-                        ),                    
+                        ),
                       ],
                     ),
                     Container(
@@ -860,7 +887,6 @@ class _MyAppState extends State<MyApp> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        
                         ElevatedButton(
                           onPressed: () async {
                             toggleFileLogging();

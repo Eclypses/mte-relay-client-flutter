@@ -23,33 +23,32 @@
 // SOFTWARE.
 
 import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 
-class Result<T> {
-  final T? data;
+class NativeHttpResponse {
+  final Uint8List? data;
   final String? errorMessage;
   final bool isSuccess;
   final Map<String, String>? headers;
   final int? statusCode;
 
-  Result.success(this.data, {this.headers, this.statusCode})
+  NativeHttpResponse.success(this.data, {this.headers, this.statusCode})
     : errorMessage = null,
       isSuccess = true;
 
-  Result.error(this.errorMessage, {this.headers, this.statusCode})
+  NativeHttpResponse.error(this.errorMessage, {this.headers, this.statusCode})
     : data = null,
       isSuccess = false;
 
   // Convert from a Map (native response)
-  factory Result.fromMap(Map<dynamic, dynamic> map) {
+  factory NativeHttpResponse.fromMap(Map<dynamic, dynamic> map) {
     return map['success'] == true
-        ? Result.success(
+        ? NativeHttpResponse.success(
           map['data'],
           headers: _parseHeaders(map['headers']),
           statusCode: map['statusCode'],
         )
-        : Result.error(
+        : NativeHttpResponse.error(
           map['error'],
           headers: _parseHeaders(map['headers']),
           statusCode: map['statusCode'],
@@ -77,12 +76,9 @@ class Result<T> {
     return null;
   }
 
-  String get bodyAsString {
-    if (data is List<int>) {
-      return utf8.decode(data as List<int>);
-    }
-    return '';
-  }
+  Uint8List get safeData => data ?? Uint8List(0);
+
+  String get bodyAsString => utf8.decode(safeData);
 
   dynamic get bodyAsJsonObject {
     final body = bodyAsString;
