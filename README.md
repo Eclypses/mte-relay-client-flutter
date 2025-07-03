@@ -71,7 +71,7 @@ final _mteRelayClientPlugin = MteRelayClientPlugin();
       if (args["headers"] != null && args["headers"] is Map) {
           headers = (args["headers"] as Map).map(
             (key, value) => MapEntry(key.toString(), value.toString()),
-      );
+        );
       } else {
         headers = null;
       }
@@ -131,10 +131,36 @@ Future<void> login() async {
        Map<dynamic, dynamic> response = await _mteRelayClientPlugin
           .relayDataTask(args);
 
-      // Retrieve sample Header Value
+      // The primary difference between a Result object and NativeHttpResponse object is the body (data element) datatype.
+      // OPTION 1 to handle the responseMap
+      // In this case, the body (result.data) type is 'T?'
+      final result = Result.fromMap(responseMap);
+      if (!result.isSuccess && result.errorMessage != null) {
+        _showResult(result.isSuccess, result.errorMessage!);
+      }
+
+      // If body can be converted to a string
+      // Returns an empty String if data is null or can't be converted to a String
+      final bodyString = result.bodyAsString;
+
+      // If body can be converted to a Json Object. Returns null if it can't be converted.
+      final bodyJson = result.bodyAsJsonObject;
+
+      // OPTION 2 to handle the responseMap
+      // In this case, the body (result.data) type is Uint8List?
+      final nativeResponse = NativeHttpResponse.fromMap(responseMap);
+
+      // If body can be converted to a string
+      // Returns an empty String if data is null or can't be converted to a String
+      final dataString = nativeResponse.bodyAsString;
+
+      // If body can be converted to a Json Object. Returns null if it can't be converted.
+      final dataJson = nativeResponse.bodyAsJsonObject;
+
+      // Retrieve sample values from either Result or NativeHttpResponse object
       final headerName = "Date";
-      final result = Result.fromMap(response);
-      String? header = result.headers?[headerName];
+      final nativeResponse = NativeHttpResponse.fromMap(response);
+      String? header = nativeResponse.headers?[headerName];
       if (header != null && header.isNotEmpty) {
         print(
           "Retrieved header from Login Response: \n\tkey=$headerName\n\tvalue=$header",
@@ -142,11 +168,19 @@ Future<void> login() async {
       }
 
       // Retrieve statusCode
-      int? statusCode = result.statusCode;
+      int? statusCode = nativeResponse.statusCode;
 
-      // Retrieve body data
-      final dynamic jsonObject = json.decode(utf8.decode(result.data));
+      // Retrieve body data ...
+      // If body is a valid utf8 String
+      final bodyString = nativeResponse.bodyAsString
+
+      // If body is valid json
+      final dynamic jsonObject = nativeResponse.bodyAsJsonObject;
      // Deal appropriately with JSON Data
+
+
+
+
     } on PlatformException {
       // Deal appropriately with PlatformException
     } catch (error) {
