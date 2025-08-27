@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios.git",
       "state" : {
-        "revision" : "2087b819b69704502328535e9bcdb558240151b8",
-        "version" : "4.3.3"
+        "revision" : "f13ea81b7438f36289b157d9836df2e9a557017e",
+        "version" : "4.3.4"
       }
     }
   ],
