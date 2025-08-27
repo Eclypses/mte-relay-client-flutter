@@ -343,42 +343,55 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
   @SuppressWarnings("unchecked")
   private void relayDataTask(Map<String, Object> args, MethodChannel.Result result) {
     final Map<String, Object> resultMap = new HashMap<>();
+     Map<String, String> flatHeaders = new HashMap<>();
+
     VolleyRequestListener listener = new VolleyRequestListener() {
 
       @Override
-      public void onError(int statusCode, String message, Map<String, List<String>> responseHeaders) {
+      public void onError(int statusCode,
+                          String message,
+                          Map<String, List<String>> responseHeaders) {
+        flattenResponseHeaderMap(responseHeaders, flatHeaders);
         resultMap.put("statusCode", statusCode);
         resultMap.put("success", false);
         resultMap.put("data", null);
+        resultMap.put("headers", flatHeaders);
+        result.success(resultMap);
+      }
+
+      @Override
+      public void onJsonResponse(int statusCode,
+                                 JSONObject jsonResponseData,
+                                 Map<String, List<String>> responseHeaders) {
+        flattenResponseHeaderMap(responseHeaders, flatHeaders);
+        String normalizedResponseString = jsonResponseData.toString().replace("\\/", "/");
+        resultMap.put("statusCode", statusCode);
+        resultMap.put("success", true);
+        resultMap.put("data", normalizedResponseString.getBytes(StandardCharsets.UTF_8));
+        resultMap.put("headers", flatHeaders);
+        result.success(resultMap);
+      }
+
+      @Override
+      public void onJsonArrayResponse(int statusCode,
+                                      JSONArray jsonArrayResponseData,
+                                      Map<String, String> responseHeaders) {
+        String normalizedResponseString = jsonArrayResponseData.toString().replace("\\/", "/");
+        resultMap.put("statusCode", statusCode);
+        resultMap.put("success", true);
+        resultMap.put("data", normalizedResponseString.getBytes(StandardCharsets.UTF_8));
         resultMap.put("headers", responseHeaders);
         result.success(resultMap);
       }
 
       @Override
-      public void onJsonResponse(int statusCode, JSONObject jsonResponseData,
-          Map<String, List<String>> responseHeaders) {
+      public void onStringResponse(int statusCode,
+                                   String stringResponseData,
+                                   Map<String, String> responseHeaders) {
+        String normalizedResponseString = stringResponseData.replace("\\/", "/");
         resultMap.put("statusCode", statusCode);
         resultMap.put("success", true);
-        resultMap.put("data", jsonResponseData.toString().getBytes(StandardCharsets.UTF_8));
-        resultMap.put("headers", responseHeaders);
-        result.success(resultMap);
-      }
-
-      @Override
-      public void onJsonArrayResponse(int statusCode, JSONArray jsonArrayResponseData,
-          Map<String, String> responseHeaders) {
-        resultMap.put("statusCode", statusCode);
-        resultMap.put("success", true);
-        resultMap.put("data", jsonArrayResponseData.toString().getBytes(StandardCharsets.UTF_8));
-        resultMap.put("headers", responseHeaders);
-        result.success(resultMap);
-      }
-
-      @Override
-      public void onStringResponse(int statusCode, String stringResponseData, Map<String, String> responseHeaders) {
-        resultMap.put("statusCode", statusCode);
-        resultMap.put("success", true);
-        resultMap.put("data", stringResponseData.getBytes(StandardCharsets.UTF_8));
+        resultMap.put("data", normalizedResponseString.getBytes(StandardCharsets.UTF_8));
         resultMap.put("headers", responseHeaders);
         result.success(resultMap);
       }
@@ -425,6 +438,16 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
       resultMap.put("data", e.getMessage().getBytes(StandardCharsets.UTF_8));
       resultMap.put("headers", null);
       result.success(resultMap);
+    }
+  }
+
+  void flattenResponseHeaderMap(Map<String, List<String>> headerMap,
+                                Map<String, String> flatHeaders) {
+    for (Map.Entry<String, List<String>> entry : headerMap.entrySet()) {
+      if (entry.getValue() != null) {
+        // join multiple values with commas
+        flatHeaders.put(entry.getKey(), String.join(",", entry.getValue()));
+      }
     }
   }
 

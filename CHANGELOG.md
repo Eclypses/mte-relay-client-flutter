@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.3] - 2025-08-27
+
+### Added 
+
+### Changed
+- Updated Version number in pubspec.yaml
+- Removed escape characters from Android Response Body Json
+- Removed square brackets from Android Response Headers
+- Upgraded iOS Relay Package which downgraded iOS Target from v16 to v14
+
+[4.2.3]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.3
+<br><br>
+
 ## [4.2.2] - 2025-05-21
 
 ### Added
