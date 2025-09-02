@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.5] - 2025-09-02
+
+### Added 
+
+### Changed
+- Updated Version number in README.mdl
+
+[4.2.5]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.5
+
 ## [4.2.4] - 2025-09-02
 
 ### Added 

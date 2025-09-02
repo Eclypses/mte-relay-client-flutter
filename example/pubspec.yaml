@@ -22,11 +22,11 @@ dependencies:
   mte_relay_client_plugin:
     path: ../
 
- # . . . and uncomment this section to pull plugin from GitHub
+ # . . . and uncomment this section to have this example project pull plugin from GitHub
   # mte_relay_client_plugin:
   #   git:
   #     url: https://github.com/Eclypses/mte-relay-client-flutter.git
-  #     ref: 4.2.4 
+  #     ref: 4.2.5 
 
 
 

@@ -35,7 +35,7 @@ dependencies:
     mte_relay_client_plugin:
         git:
             url: https://github.com/Eclypses/mte-relay-client-flutter.git
-            ref: 4.2.3
+            ref: 4.2.5
 ```
 
 NOTE - Compiling Example project for an iOS device or simulator requires targeting iOS version 16 or greater. Search in files for "IPHONEOS_DEPLOYMENT_TARGET = "and in project.pbxproj, make sure the target is 16 in all cases.
