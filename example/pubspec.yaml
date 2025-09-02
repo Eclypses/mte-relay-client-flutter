@@ -18,13 +18,17 @@ dependencies:
     sdk: flutter
   path_provider: ^2.1.5
   
+# Comment this section . . . 
   mte_relay_client_plugin:
     path: ../
 
+ # . . . and uncomment this section to pull plugin from GitHub
   # mte_relay_client_plugin:
   #   git:
   #     url: https://github.com/Eclypses/mte-relay-client-flutter.git
-  #     ref: 4.2.3 
+  #     ref: 4.2.4 
+
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
