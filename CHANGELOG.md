@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.6] - 2025-09-02
+
+### Added 
+- Added iOS Integration Guide
+
+### Changed
+- Updated Version number throughout
+
+[4.2.6]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.6
+
 ## [4.2.5] - 2025-09-02
 
 ### Added 

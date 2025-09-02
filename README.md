@@ -35,10 +35,10 @@ dependencies:
     mte_relay_client_plugin:
         git:
             url: https://github.com/Eclypses/mte-relay-client-flutter.git
-            ref: 4.2.5
+            ref: 4.2.6
 ```
 
-NOTE - Compiling Example project for an iOS device or simulator requires targeting iOS version 16 or greater. Search in files for "IPHONEOS_DEPLOYMENT_TARGET = "and in project.pbxproj, make sure the target is 16 in all cases.
+NOTE - Compiling Example project for an iOS device or simulator requires targeting iOS version 14 or greater. Search in yourFlutterApp/ios/Runner/Runner.xcodeproj/project.pbxproj for "IPHONEOS_DEPLOYMENT_TARGET = "and make sure the target is 14 or greater in all cases.
 
 - In a terminal at the root directory of the project, run Flutter pub get. This should install the MteRelay Client Plugin to your project. 
 - In the file where you expect to maintain the reference to the MteRelay plugin, import it. 
