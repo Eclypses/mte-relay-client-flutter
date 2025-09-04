@@ -1,6 +1,6 @@
 name: mte_relay_client_plugin
 description: "A Flutter Plugin, implementing the Eclypses AWS MteRelay Client."
-version: 4.2.8
+version: 4.2.9
 homepage:
 
 environment:
