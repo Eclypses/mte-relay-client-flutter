@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.10] - 2025-09-05
+
+### Added 
+
+### Changed
+- Updated mte_relay_client_plugin.java to remove unneeded Override
+- Updated pubspec.yaml to pull updated MteRelay library
+- Updated Version number throughout
+
+[4.2.10]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.10
+
 ## [4.2.9] - 2025-09-04
 
 ### Added 
@@ -11,8 +22,6 @@ All notable changes to this project will be documented in this file.
 - Updated Version number throughout
 
 [4.2.9]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.9
-
-All notable changes to this project will be documented in this file.
 
 ## [4.2.8] - 2025-09-03
 
