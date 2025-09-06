@@ -15,7 +15,7 @@ dependencies:
   mte_relay_client_plugin:
     git:
       url: https://github.com/Eclypses/mte-relay-client-flutter.git
-      ref: 4.2.9  
+      ref: 4.2.10  
 ```
 3.	Update iOS deployment target
 	•	Open ios/Podfile and make sure the platform matches the plugin’s minimum requirement:
@@ -42,7 +42,7 @@ If you have a strong reason to manage dependencies strictly through CocoaPods, y
 Steps
 	1.	Add plugin to Podfile
 ``` ruby
-pod 'mte-relay-client-plugin', :git => 'https://github.com/Eclypses/mte-relay-client-flutter.git', :ref => '4.2.9'
+pod 'mte-relay-client-plugin', :git => 'https://github.com/Eclypses/mte-relay-client-flutter.git', :ref => '4.2.10'
 ```
 	2.	Update iOS deployment target
         •	Same as above:

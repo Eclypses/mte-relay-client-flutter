@@ -628,13 +628,6 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
           listener.onError(statusCode, e.getMessage(), responseHeaders);
         }
       }
-
-      @Override
-      public void onResponse(NetworkResponse networkResponse, JSONObject responseJson,
-          Map<String, List<String>> responseHeaders) {
-        int statusCode = networkResponse.statusCode;
-        listener.onJsonResponse(statusCode, responseJson, responseHeaders);
-      }
     });
   }
 
