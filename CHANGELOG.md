@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.11] - 2025-09-30
+
+### Added 
+
+### Changed
+- Fixed crash when Volley response contains no NetworkResponse
+
+[4.2.11]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.11
+
 ## [4.2.10] - 2025-09-05
 
 ### Added 

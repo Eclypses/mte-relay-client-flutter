@@ -604,7 +604,10 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
     relay.addToMteRequestQueue(request, headerArray, pathnamePrefix, new RelayVolleyRequestListener() {
       @Override
       public void onError(NetworkResponse networkResponse, String message, Map<String, List<String>> responseHeaders) {
-        int statusCode = networkResponse.statusCode;
+        int statusCode = 503;
+        if (networkResponse != null) {
+          statusCode = networkResponse.statusCode;
+        }
         listener.onError(statusCode, message, responseHeaders);
       }
 
