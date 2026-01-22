@@ -2,87 +2,110 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- Added dev_docs directory and release script
+
+### Changed
+- Enhanced README to be a comprehensive implementation guide, suitable for all experience levels
+
+### Fixed
+-
+
+
 ## [4.2.11] - 2025-09-30
 
 ### Added 
-
-### Changed
-- Fixed crash when Volley response contains no NetworkResponse
-
-[4.2.11]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.11
-
-## [4.2.10] - 2025-09-05
-
-### Added 
+-
 
 ### Changed
 - Updated mte_relay_client_plugin.java to remove unneeded Override
 - Updated pubspec.yaml to pull updated MteRelay library
 - Updated Version number throughout
 
-[4.2.10]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.10
+### Fixed
+-
+
+## [4.2.10] - 2025-09-05
+
+### Added 
+-
+
+### Changed
+- Updated mte_relay_client_plugin.java to remove unneeded Override
+- Updated pubspec.yaml to pull updated MteRelay library
+- Updated Version number throughout
+
+### Fixed
+-
 
 ## [4.2.9] - 2025-09-04
 
-### Added 
+### Added
+-
 
 ### Changed
-- Updated mte_relay_client_plugin.podspec to reference multiple MteRelay submodule dependencies
+- Updated to use Swift Package Manager instead of CocoaPods
 - Updated Version number throughout
 
-[4.2.9]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.9
+### Fixed
+-
 
 ## [4.2.8] - 2025-09-03
 
 ### Added 
+-
 
 ### Changed
-- Updated mte_relay_client_plugin.podspec to reflect updated MteRelay for iOS
+- Updated to reference updated MteRelay for iOS
 - Updated Version number throughout
 
-[4.2.8]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.8
+### Fixed
+-
 
 ## [4.2.7] - 2025-09-03
 
 ### Added 
+- 
 
 ### Changed
 - Updated mte_relay_client_plugin.podspec
-- Updated Version number throughout
 
-[4.2.7]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.7
+### Fixed
+-
 
 ## [4.2.6] - 2025-09-02
 
 ### Added 
-- Added iOS Integration Guide
-
-### Changed
-- Updated Version number throughout
-
-[4.2.6]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.6
+-
 
 ## [4.2.5] - 2025-09-02
 
 ### Added 
+-
 
 ### Changed
-- Updated Version number in README.mdl
+- Updated Version number in README.md
 
-[4.2.5]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.5
+### Fixed
+-
 
 ## [4.2.4] - 2025-09-02
 
 ### Added 
+-
 
 ### Changed
 - Updated Version number in pubspec.yaml
 
-[4.2.4]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.4
+### Fixed
+-
 
 ## [4.2.3] - 2025-08-27
 
 ### Added 
+-
 
 ### Changed
 - Updated Version number in pubspec.yaml
@@ -90,52 +113,48 @@ All notable changes to this project will be documented in this file.
 - Removed square brackets from Android Response Headers
 - Upgraded iOS Relay Package which downgraded iOS Target from v16 to v14
 
-[4.2.3]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.3
-<br><br>
+### Fixed
+-
 
-## [4.2.2] - 2025-05-21
+## [4.2.2] - 2025-07-03
 
-### Added
-- Added convenience getters to Result class
-- Added NativeHttpResponse class to map responses from Native code. 
+### Added 
+-
 
-### Changed
-- Updated Version number in pubspec.yaml
-
-[4.2.2]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.2
-<br><br>
+### Fixed
+-
 
 ## [4.2.1] - 2025-05-21
 
-### Added
- 
+### Added 
+-
 
 ### Changed
-- Updated README to correct method signatures
 - Updated Version number in pubspec.yaml
-- Various minor bug fixes
+- Removed escape characters from Android Response Body Json
+- Removed square brackets from Android Response Headers
+- Upgraded iOS Relay Package which downgraded iOS Target from v16 to v14
 
 ### Fixed
-- Reurning 'Result' for logging methods
+-
 
-[4.2.1]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.1
-<br><br>
-
-## [4.2.0] - 2025-05-17
+## [1.0.0] - Initial Release
 
 ### Added
-- Added Native Logging To File, available to Flutter (work in progress)
-- Added Native http response StatusCode values to result object and FileStreamResponseStream arguments. 
+- Initial Release. iOS plugin calls are working. Android not yet implemented.
 
-### Changed
-- Set Native default pairPoolSize to 5.
+[1.0.0]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v1.0.0
+[4.2.1]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.1
+[4.2.2]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.2
+[4.2.3]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.3
+[4.2.4]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/4.2.4
+[4.2.5]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/4.2.5
+[4.2.6]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/4.2.6
+[4.2.7]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/4.2.7
+[4.2.8]: https://github.com/Eclypses/emte-relay-client-flutterreleases/tag/4.2.8
+[4.2.9]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v
+[4.2.10]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/4.2.10
+[4.2.11]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.11
 
-### Fixed
-- Swift - Fixed null exception where we tried to remove non-existant storedHost.
-- Removed debug comments
 
-[4.2.0]: https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios/releases/tag/4.2.0
-<br><br>
-## 1.0.0
 
-* Initial Release. iOS plugin calls are working. Android not yet implemented.
