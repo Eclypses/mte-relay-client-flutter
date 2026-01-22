@@ -5,13 +5,37 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+-
+
+### Changed
+-
+
+### Fixed
+-
+
+
+## [4.3.0] - 2026-01-22
+
+### Added
+-
+
+### Changed
+-
+
+### Fixed
+-
+
+
+## [4.3.0] - 2026-01-22
+
+### Added
 - Added dev_docs directory and release script
 
 ### Changed
 - Enhanced README to be a comprehensive implementation guide, suitable for all experience levels
 
 ### Fixed
--
+- Removed Pod-based files
 
 
 ## [4.2.11] - 2025-09-30
@@ -158,3 +182,7 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+[4.3.0]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.3.0
+
+[4.3.0]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.3.0
