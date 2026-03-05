@@ -64,6 +64,18 @@ class MteRelayClientPlugin {
     return MteRelayClientPluginPlatform.instance.closeStream(args);
   }
 
+  Future<String> enableFileLogging(dynamic args) {
+    return MteRelayClientPluginPlatform.instance.enableFileLogging(args);
+  }
+
+  Future<String> readLogFile(dynamic args) {
+    return MteRelayClientPluginPlatform.instance.readLogFile(args);
+  }
+
+  Future<String> clearLogFile(dynamic args) {
+    return MteRelayClientPluginPlatform.instance.clearLogFile(args);
+  }
+
   // SECTION: Callback methods to Flutter App.
   Stream<String> get relayResponseStream =>
       MteRelayClientPluginPlatform.instance.relayResponseStream;

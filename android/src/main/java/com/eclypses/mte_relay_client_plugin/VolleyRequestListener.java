@@ -32,9 +32,9 @@ import java.util.Map;
 
 public interface VolleyRequestListener {
 
-    void onError(String message, Map<String, List<String>> responseHeaders);
-    void onJsonResponse(JSONObject response, Map<String, List<String>> responseHeaders);
-    void onJsonArrayResponse(JSONArray response, Map<String, String> responseHeaders);
-    void onStringResponse(String response, Map<String, String> responseHeaders);
+    void onError(int statusCode, String message, Map<String, List<String>> responseHeaders);
+    void onJsonResponse(int statusCode, JSONObject jsonResponseData, Map<String, List<String>> responseHeaders);
+    void onJsonArrayResponse(int statusCode, JSONArray jsonArrayResponseData, Map<String, String> responseHeaders);
+    void onStringResponse(int statusCode, String stringResponseData, Map<String, String> responseHeaders);
 }
 

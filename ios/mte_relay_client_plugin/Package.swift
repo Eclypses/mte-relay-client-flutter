@@ -6,14 +6,14 @@ import PackageDescription
 let package = Package(
     name: "mte_relay_client_plugin",
     platforms: [
-        .iOS("16.0")
+        .iOS("14.0")
     ],
     products: [
         .library(name: "mte-relay-client-plugin",
                  targets: ["mte_relay_client_plugin"])
     ],
     dependencies: [
-       .package(url: "https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios.git", from: "4.3.2")
+       .package(url: "https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios.git", from: "4.3.4")
           ],
     targets: [
         .target(

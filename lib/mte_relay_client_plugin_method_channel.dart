@@ -94,6 +94,22 @@ class MethodChannelMteRelayClientPlugin extends MteRelayClientPluginPlatform {
     return await methodChannel.invokeMethod('closeStream', args);
   }
 
+  @override
+  Future<String> enableFileLogging(dynamic args) async {
+    return await methodChannel.invokeMethod('enableFileLogging', args);
+  }
+
+  @override
+  Future<String> readLogFile(dynamic args) async {
+    return await methodChannel.invokeMethod('readLogFile', args);
+  }
+
+  @override
+  Future<String> clearLogFile(dynamic args) async {
+    return await methodChannel.invokeMethod('clearLogFile', args);
+  }
+
+
   // SECTION: Listeners for calls back from native
   Future<dynamic> _handleNativeCallback(MethodCall call) async {
     switch (call.method) {

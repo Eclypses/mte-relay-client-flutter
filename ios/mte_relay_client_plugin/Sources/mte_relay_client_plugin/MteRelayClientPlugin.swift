@@ -45,13 +45,14 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
     }
     
     // MARK: RelayDelegates
-
+    
     public func relayStreamResponse(from relayServerUrl: String, data: Data?, response: URLResponse?, error: Error?) {
-
+        
         var pluginError: String? = nil
         guard let relayResponse = response as? HTTPURLResponse else {
             pluginError = "Unable to cast response to HTTPURLResponse"
             let args: [String: Any] = [
+                "statusCode": -1,
                 "success": false,
                 "headers": nil as [String:String]?,
                 "relayError": error?.localizedDescription,
@@ -62,7 +63,8 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
             }
             return
         }
-        let success = (relayResponse.statusCode >= 200 && relayResponse.statusCode < 300)        
+        let statusCode = relayResponse.statusCode
+        let success = (statusCode >= 200 && statusCode < 300)
         var headers: [String: String] = [:]
         for (key, value) in relayResponse.allHeaderFields {
             if let keyString = key as? String, let valueString = value as? String {
@@ -71,8 +73,9 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
                 headers[key.description] = "\(value)" // Convert non-string values to string
             }
         }
-                     
+        
         let args: [String: Any] = [
+            "statusCode": statusCode,
             "success": success,
             "data": data,
             "headers": headers,
@@ -122,7 +125,6 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
                 }
             }
             result(nil) // No result needed for initialization
-            
         case "relayDataTask":
             if let args = call.arguments as? [String: Any] {
                 relayDataTask(args, result)
@@ -140,7 +142,6 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
                 result(FlutterError(code: "ERROR", message: "Relay not initialized or invalid parameters", details: nil))
             }
         case "relayDownloadFile":
-        print("Received Download request in Swift")
             if let args = call.arguments as? [String: Any] {
                 relay.relayStreamResponseDelegate = self
                 streamingResult = result
@@ -172,6 +173,24 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
             }else {
                 result(FlutterError(code: "ERROR", message: "Invalid parameters", details: nil))
             }
+        case "enableFileLogging":
+            if let args = call.arguments as? [String: Any] {
+                enableFileLogging(args, result)
+            }else {
+                result(FlutterError(code: "ERROR", message: "Invalid parameters", details: nil))
+            }
+        case "readLogFile":
+            if let args = call.arguments as? [String: Any] {
+                readLogFile(args, result)
+            }else {
+                result(FlutterError(code: "ERROR", message: "Invalid parameters", details: nil))
+            }
+        case "clearLogFile":
+            if let args = call.arguments as? [String: Any] {
+                clearLogFile(args, result)
+            }else {
+                result(FlutterError(code: "ERROR", message: "Invalid parameters", details: nil))
+            }
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -180,9 +199,9 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
     // MARK: Flutter Method Calls to Relay
     fileprivate func relayDataTask(_ args: [String: Any],
                                    _ result: @escaping FlutterResult) {
+        let pathnamePrefix = args["pathnamePrefix"] as? String
         guard let urlString = args["url"] as? String,
               let url = URL(string: urlString),
-              let pathnamePrefix = args["pathnamePrefix"] as? String,
               var route = args["route"] as? String,
               let method = args["method"] as? String,
               let headers = args["headers"] as? [String: String],
@@ -205,13 +224,13 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
         // Set `httpBody` only if `body` exists and is non-empty
         if let body = body, !body.isEmpty {
             var bodyData = Data()
-
-        if let decodedData = Data(base64Encoded: body) {
+            
+            if let decodedData = Data(base64Encoded: body) {
                 bodyData = decodedData
             } else {
                 bodyData = body.data(using: .utf8)!
             }
-
+            
             request.httpBody = bodyData
         }
         Task {
@@ -229,12 +248,14 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
                 
                 if let error = error {
                     result([
+                        "statusCode": relayResponse.statusCode,
                         "success": false,
                         "error": "Failed to fetch data",
                         "headers": headers
                     ])
                 } else {
                     result([
+                        "statusCode": relayResponse.statusCode,
                         "success": true,
                         "data": data,
                         "headers": headers
@@ -246,9 +267,9 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
     
     fileprivate func relayFileStreamUpload(_ args: [String: Any],
                                            _ result: @escaping FlutterResult) {
+        let pathnamePrefix = args["pathnamePrefix"] as? String
         guard let urlString = args["url"] as? String,
               let url = URL(string: urlString),
-              let pathnamePrefix = args["pathnamePrefix"] as? String,
               var route = args["route"] as? String,
               let method = args["method"] as? String,
               let headers = args["headers"] as? [String: String],
@@ -269,9 +290,9 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
     
     fileprivate func relayFileStreamDownload(_ args: [String: Any],
                                              _ result: @escaping FlutterResult) {
+        let pathnamePrefix = args["pathnamePrefix"] as? String
         guard let urlString = args["url"] as? String,
               let url = URL(string: urlString),
-              let pathnamePrefix = args["pathnamePrefix"] as? String,
               var route = args["route"] as? String,
               let method = args["method"] as? String,
               let headers = args["headers"] as? [String: String],
@@ -299,25 +320,25 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
     
     fileprivate func rePair(_ args: [String: Any],
                             _ result: @escaping FlutterResult) {
+        let pathnamePrefix = args["pathnamePrefix"] as? String
         guard let urlString = args["url"] as? String,
-              let _ = URL(string: urlString),
-              let pathnamePrefix = args["pathnamePrefix"] as? String else {
+              let _ = URL(string: urlString) else {
             result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
             return
         }
         Task {
             try await relay.rePairwithRelayServer(relayServerUrlString: urlString, pathnamePrefix: pathnamePrefix)
-            }
         }
+    }
     
     
     fileprivate func adjustRelaySettings(_ args: [String: Any],
                                          _ result: @escaping FlutterResult) {
         var responseMessage = ""
         do {
+            let pathnamePrefix = args["pathnamePrefix"] as? String
             guard let urlString = args["url"] as? String,
                   let _ = URL(string: urlString),
-                  let pathnamePrefix = args["pathnamePrefix"] as? String,
                   let newStreamChunkSize = args["streamChunkSize"] as? Int,
                   let newPairPoolSize = args["pairPoolSize"] as? Int,
                   let persistPairs = args["persistPairs"] as? Bool else {
@@ -326,10 +347,10 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
             }
             Task {
                 try await relay.adjustRelaySettings(serverUrl: urlString,
-                                                       pathnamePrefix: pathnamePrefix,
-                                                       newStreamChunkSize: newStreamChunkSize,
-                                                       newPairPoolSize: newPairPoolSize,
-                                                       persistPairs: persistPairs)
+                                                    pathnamePrefix: pathnamePrefix,
+                                                    newStreamChunkSize: newStreamChunkSize,
+                                                    newPairPoolSize: newPairPoolSize,
+                                                    persistPairs: persistPairs)
             }
         } catch {
             result("Adjust RelaySettings Failed")
@@ -395,11 +416,54 @@ public class MteRelayClientPlugin: NSObject, FlutterPlugin, RelayResponseDelegat
             }
         }
     }
-
-    func isUtf8Text(_ data: Data) -> Bool {
-    if let _ = String(data: data, encoding: .utf8) {
-        return true
+    
+    fileprivate func enableFileLogging(_ args: [String: Any],
+                                       _ result: @escaping FlutterResult) {
+        let pathnamePrefix = args["pathnamePrefix"] as? String
+         guard let urlString = args["url"] as? String,
+              let _ = URL(string: urlString),
+              let isEnabled = args["isEnabled"] as? Bool else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
+            return
+        }
+        Task {
+            try await Relay.enableFileLogging(isEnabled)
+            let message = "Success! - File logging \(isEnabled ? "enabled" : "disabled")"
+            result(message)
+        }
     }
-    return false
-}
+    
+    fileprivate func readLogFile(_ args: [String: Any],
+                                 _ result: @escaping FlutterResult) {
+        let pathnamePrefix = args["pathnamePrefix"] as? String
+         guard let urlString = args["url"] as? String,
+              let _ = URL(string: urlString) else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
+            return
+        }
+        Task {
+            result(try await Relay.readLogFile())
+        }
+    }
+    
+    fileprivate func clearLogFile(_ args: [String: Any],
+                                  _ result: @escaping FlutterResult) {
+        let pathnamePrefix = args["pathnamePrefix"] as? String
+         guard let urlString = args["url"] as? String,
+              let _ = URL(string: urlString) else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments", details: nil))
+            return
+        }
+        Task {
+            try await Relay.clearLogFile()
+            result("Log File Cleared")
+        }
+    }
+    
+    func isUtf8Text(_ data: Data) -> Bool {
+        if let _ = String(data: data, encoding: .utf8) {
+            return true
+        }
+        return false
+    }
 }

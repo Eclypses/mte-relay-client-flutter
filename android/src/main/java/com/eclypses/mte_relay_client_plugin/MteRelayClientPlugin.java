@@ -43,8 +43,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
+import com.android.volley.NetworkResponse;
 import com.mte.relay.Relay;
-import com.mte.relay.RelayDataTaskListener;
+import com.mte.relay.RelayVolleyRequestListener;
 import com.mte.relay.RelayFileRequestProperties;
 import com.mte.relay.RelayResponseListener;
 import com.mte.relay.RelayStreamCallback;
@@ -85,7 +86,8 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
   RelayResponseListener relayResponseListener = (success, message) -> relayResponse(success, message, null);
 
   private void relayResponse(boolean success, String responseStr, String errorMessage) {
-    String resultMessage = "Relay Response: " + success + " " + responseStr + " " + (errorMessage != null ? errorMessage : "");
+    String resultMessage = "Relay Response: " + success + " " + responseStr + " "
+        + (errorMessage != null ? errorMessage : "");
 
     new Handler(Looper.getMainLooper()).post(() -> {
       if (methodChannel != null) {
@@ -94,10 +96,12 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
     });
   }
 
-  private void relayStreamResponseMethod(boolean success,
-                                         String responseStr,
-                                         String errorMessage,
-                                         Map<String, List<String>> responseHeaders) {
+  private void relayStreamResponseMethod(
+      int statusCode,
+      boolean success,
+      String responseStr,
+      String errorMessage,
+      Map<String, List<String>> responseHeaders) {
 
     Map<String, Object> args = new HashMap<>();
     args.put("success", success);
@@ -105,6 +109,7 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
     args.put("headers", responseHeaders);
     args.put("relayError", errorMessage);
     args.put("pluginError", null);
+    args.put("statusCode", statusCode);
 
     new Handler(Looper.getMainLooper()).post(() -> {
       if (methodChannel != null) {
@@ -210,6 +215,33 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
         }
         break;
 
+      case "enableFileLogging":
+        try {
+          Map<String, Object> enableFileLoggingArgs = ensureArgumentsMap(call.arguments);
+          enableFileLogging(enableFileLoggingArgs, result);
+        } catch (IllegalArgumentException e) {
+          result.error("INVALID_ARGUMENTS", e.getMessage(), null);
+        }
+        break;
+
+      case "readLogFile":
+        try {
+          Map<String, Object> readLogFileArgs = ensureArgumentsMap(call.arguments);
+          readLogFile(readLogFileArgs, result);
+        } catch (IllegalArgumentException e) {
+          result.error("INVALID_ARGUMENTS", e.getMessage(), null);
+        }
+        break;
+
+      case "clearLogFile":
+        try {
+          Map<String, Object> clearLogFileArgs = ensureArgumentsMap(call.arguments);
+          clearLogFile(clearLogFileArgs, result);
+        } catch (IllegalArgumentException e) {
+          result.error("INVALID_ARGUMENTS", e.getMessage(), null);
+        }
+        break;
+
       default:
         result.notImplemented();
         break;
@@ -222,7 +254,7 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
   private void relayFileStreamUpload(Map<String, Object> args, MethodChannel.Result result) {
     String[] headersToEncrypt = new String[0];
     try {
-      String urlString = (String) args.get("url");
+      String fullUrlString = getFullUrlString(args);
       String pathnamePrefix = (String) args.get("pathnamePrefix");
       String methodString = (String) args.get("method");
       Map<String, String> headers = (Map<String, String>) args.get("headers");
@@ -231,36 +263,35 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
         headersToEncrypt = headersToEncryptList.toArray(new String[0]);
       }
 
-      if (urlString == null || methodString == null || headers == null) {
+      if (fullUrlString == null || methodString == null || headers == null) {
         result.error("INVALID_ARGUMENTS", "Invalid arguments", null);
         return;
       }
       if (!methodString.equals("POST")) {
         relayResponse(
-                false,
-                "\nError Code 418",
-                "Currently, only POST requests for streamed file uploads are supported."
-        );
+            false,
+            "\nError Code 418",
+            "Currently, only POST requests for streamed file uploads are supported.");
       }
 
-      URL url = new URL(urlString);
+      URL url = new URL(fullUrlString);
       String protocol = url.getProtocol();
       String authority = url.getAuthority();
       String route = url.getPath();
       String host = protocol + "://" + authority;
 
       RelayFileRequestProperties reqProperties = new RelayFileRequestProperties(
-              host,
-              headers,
-              headersToEncrypt,
-              relayStreamCallback);
+          host,
+          headers,
+          headersToEncrypt,
+          relayStreamCallback);
 
       relay.uploadFile(
-              reqProperties,
-              route,
-              pathnamePrefix,
-              listener,
-              (i, i1) -> relayStreamCompletionCallback.onProgressUpdate(i, i1));
+          reqProperties,
+          route,
+          pathnamePrefix,
+          listener,
+          (i, i1) -> relayStreamCompletionCallback.onProgressUpdate(i, i1));
 
     } catch (Exception e) {
       result.error("", e.getMessage(), null);
@@ -271,7 +302,7 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
   private void relayFileStreamDownload(Map<String, Object> args, MethodChannel.Result result) {
     String[] headersToEncrypt = new String[0];
     try {
-      String urlString = (String) args.get("url");
+      String fullUrlString = getFullUrlString(args);
       String pathnamePrefix = (String) args.get("pathnamePrefix");
       String methodString = (String) args.get("method");
       Map<String, String> headers = (Map<String, String>) args.get("headers");
@@ -281,28 +312,28 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
       }
       String downloadLocation = (String) args.get("downloadLocation");
 
-      if (urlString == null || methodString == null || headers == null || downloadLocation == null) {
+      if (fullUrlString == null || methodString == null || headers == null || downloadLocation == null) {
         result.error("INVALID_ARGUMENTS", "Invalid arguments", null);
         return;
       }
 
-      URL url = new URL(urlString);
+      URL url = new URL(fullUrlString);
       String protocol = url.getProtocol();
       String authority = url.getAuthority();
       String route = url.getPath();
       String host = protocol + "://" + authority;
 
       RelayFileRequestProperties reqProperties = new RelayFileRequestProperties(
-              host,
-              route,
-              downloadLocation,
-              headers,
-              headersToEncrypt);
+          host,
+          route,
+          downloadLocation,
+          headers,
+          headersToEncrypt);
 
       relay.downloadFile(
-              reqProperties,
-              pathnamePrefix,
-              listener);
+          reqProperties,
+          pathnamePrefix,
+          listener);
 
     } catch (Exception e) {
       result.error("", e.getMessage(), null);
@@ -312,36 +343,55 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
   @SuppressWarnings("unchecked")
   private void relayDataTask(Map<String, Object> args, MethodChannel.Result result) {
     final Map<String, Object> resultMap = new HashMap<>();
+     Map<String, String> flatHeaders = new HashMap<>();
+
     VolleyRequestListener listener = new VolleyRequestListener() {
 
       @Override
-      public void onError(String message, Map<String, List<String>> responseHeaders) {
+      public void onError(int statusCode,
+                          String message,
+                          Map<String, List<String>> responseHeaders) {
+        flattenResponseHeaderMap(responseHeaders, flatHeaders);
+        resultMap.put("statusCode", statusCode);
         resultMap.put("success", false);
         resultMap.put("data", null);
+        resultMap.put("headers", flatHeaders);
+        result.success(resultMap);
+      }
+
+      @Override
+      public void onJsonResponse(int statusCode,
+                                 JSONObject jsonResponseData,
+                                 Map<String, List<String>> responseHeaders) {
+        flattenResponseHeaderMap(responseHeaders, flatHeaders);
+        String normalizedResponseString = jsonResponseData.toString().replace("\\/", "/");
+        resultMap.put("statusCode", statusCode);
+        resultMap.put("success", true);
+        resultMap.put("data", normalizedResponseString.getBytes(StandardCharsets.UTF_8));
+        resultMap.put("headers", flatHeaders);
+        result.success(resultMap);
+      }
+
+      @Override
+      public void onJsonArrayResponse(int statusCode,
+                                      JSONArray jsonArrayResponseData,
+                                      Map<String, String> responseHeaders) {
+        String normalizedResponseString = jsonArrayResponseData.toString().replace("\\/", "/");
+        resultMap.put("statusCode", statusCode);
+        resultMap.put("success", true);
+        resultMap.put("data", normalizedResponseString.getBytes(StandardCharsets.UTF_8));
         resultMap.put("headers", responseHeaders);
         result.success(resultMap);
       }
 
       @Override
-      public void onJsonResponse(JSONObject response, Map<String, List<String>> responseHeaders) {
+      public void onStringResponse(int statusCode,
+                                   String stringResponseData,
+                                   Map<String, String> responseHeaders) {
+        String normalizedResponseString = stringResponseData.replace("\\/", "/");
+        resultMap.put("statusCode", statusCode);
         resultMap.put("success", true);
-        resultMap.put("data", response.toString().getBytes(StandardCharsets.UTF_8));
-        resultMap.put("headers", responseHeaders);
-        result.success(resultMap);
-      }
-
-      @Override
-      public void onJsonArrayResponse(JSONArray response, Map<String, String> responseHeaders) {
-        resultMap.put("success", true);
-        resultMap.put("data", response.toString().getBytes(StandardCharsets.UTF_8));
-        resultMap.put("headers", responseHeaders);
-        result.success(resultMap);
-      }
-
-      @Override
-      public void onStringResponse(String response, Map<String, String> responseHeaders) {
-        resultMap.put("success", true);
-        resultMap.put("data", response.getBytes(StandardCharsets.UTF_8));
+        resultMap.put("data", normalizedResponseString.getBytes(StandardCharsets.UTF_8));
         resultMap.put("headers", responseHeaders);
         result.success(resultMap);
       }
@@ -349,7 +399,7 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
 
     String[] headersToEncrypt = new String[0];
     try {
-      String urlString = (String) args.get("url");
+      String fullUrlString = getFullUrlString(args);
       String pathnamePrefix = (String) args.get("pathnamePrefix");
       String methodString = (String) args.get("method");
       Map<String, String> headers = (Map<String, String>) args.get("headers");
@@ -359,10 +409,10 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
         headersToEncrypt = headersToEncryptList.toArray(new String[0]);
       }
       Set<String> methodsRequiringBody = new HashSet<>(Set.of("POST", "PUT", "PATCH"));
-      if (urlString == null ||
-              methodString == null ||
-              headers == null ||
-              (methodsRequiringBody.contains(methodString) && body == null)) {
+      if (fullUrlString == null ||
+          methodString == null ||
+          headers == null ||
+          (methodsRequiringBody.contains(methodString) && body == null)) {
         result.error("INVALID_ARGUMENTS", "Invalid arguments", null);
         return;
       }
@@ -380,14 +430,36 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
 
       int method = getRequestMethod(methodString);
 
-      Request<?> request = createRequest(bodyStr, method, urlString, listener, headers);
+      Request<?> request = createRequest(bodyStr, method, fullUrlString, listener, headers);
       sendToRelay(request, headersToEncrypt, pathnamePrefix, listener);
     } catch (Exception e) {
+      resultMap.put("statusCode", -1);
       resultMap.put("success", false);
       resultMap.put("data", e.getMessage().getBytes(StandardCharsets.UTF_8));
       resultMap.put("headers", null);
       result.success(resultMap);
     }
+  }
+
+  void flattenResponseHeaderMap(Map<String, List<String>> headerMap,
+                                Map<String, String> flatHeaders) {
+    for (Map.Entry<String, List<String>> entry : headerMap.entrySet()) {
+      if (entry.getValue() != null) {
+        // join multiple values with commas
+        flatHeaders.put(entry.getKey(), String.join(",", entry.getValue()));
+      }
+    }
+  }
+
+  private String getFullUrlString(Map<String, Object> args) {
+    String urlString = (String) args.get("url");
+    String route = (String) args.get("route");
+
+    if (!route.startsWith("/")) {
+      route = "/" + route;
+    }
+    String fullUrlString = urlString + route;
+    return fullUrlString;
   }
 
   private void writeToStream(Map<String, Object> args, MethodChannel.Result result) {
@@ -397,10 +469,11 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
 
     if (streamID == null || data == null || outputStream == null) {
       relayStreamResponseMethod(
-              false,
-              "",
-              "writeToStream received invalid arguments.",
-              null);
+          -1,
+          false,
+          "",
+          "writeToStream received invalid arguments.",
+          null);
       return;
     }
     writeToOutputStream(outputStream, data);
@@ -411,10 +484,11 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
     String streamID = (String) args.get("streamID");
     if (streamID == null) {
       relayStreamResponseMethod(
-              false,
-              "",
-              "closeStream received invalid arguments.",
-              null);
+          -1,
+          false,
+          "",
+          "closeStream received invalid arguments.",
+          null);
       return;
     }
 
@@ -424,10 +498,11 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
         outputStream.close(); // Ensure it is closed
       } catch (IOException e) {
         relayStreamResponseMethod(
-                false,
-                null,
-                "closeStream Exception: " + e.getMessage(),
-                null);
+            -1,
+            false,
+            null,
+            "closeStream Exception: " + e.getMessage(),
+            null);
       }
     }
   }
@@ -439,15 +514,22 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
 
   private void adjustRelaySettings(Map<String, Object> args) {
     String serverUrl = null;
+    String pathnamePrefix = null;
     int newStreamChunkSize = 0;
     int newPairPoolSize = 0;
     Boolean persistPairs = false;
 
     try {
-      if (args.containsKey("serverUrl")) {
-        Object serverUrlObj = args.get("serverUrl");
+      if (args.containsKey("url")) {
+        Object serverUrlObj = args.get("url");
         if (serverUrlObj instanceof String) {
           serverUrl = (String) serverUrlObj;
+        }
+      }
+      if (args.containsKey("pathnamePrefix")) {
+        Object pathnamePrefixObj = args.get("pathnamePrefix");
+        if (pathnamePrefixObj instanceof String) {
+          pathnamePrefix = (String) pathnamePrefixObj;
         }
       }
       if (args.containsKey("streamChunkSize")) {
@@ -469,53 +551,85 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
           persistPairs = (Boolean) persistPairsObj;
         }
       }
-      String responseMessage = relay.adjustRelaySettings(serverUrl,
-              newStreamChunkSize,
-              newPairPoolSize,
-              persistPairs);
+      String responseMessage = relay.adjustRelaySettings(
+          serverUrl,
+          pathnamePrefix,
+          newStreamChunkSize,
+          newPairPoolSize,
+          persistPairs);
       relayResponse(
-              true,
-              responseMessage,
-              null
-      );
+          true,
+          responseMessage,
+          null);
     } catch (Exception e) {
       relayResponse(
-              false,
-              "\nAdjust RelaySettings Failed",
-              "Error: " + e.getMessage()
-      );
+          false,
+          "\nAdjust RelaySettings Failed",
+          "Error: " + e.getMessage());
     }
   }
 
-  private <T> void sendToRelay(Request<T> request, String[] headerArray, String pathnamePrefix, VolleyRequestListener listener) {
-    relay.addToMteRequestQueue(request, headerArray, pathnamePrefix, new RelayDataTaskListener() {
+  private void enableFileLogging(Map<String, Object> args, MethodChannel.Result result) {
+    String urlString = (String) args.get("url");
+    String pathnamePrefix = (String) args.get("pathnamePrefix");
+    Boolean isEnabled = (Boolean) args.get("isEnabled");
+    Relay.enableFileLogging(urlString, pathnamePrefix, isEnabled);
+    String message = "Success! - File logging " + (isEnabled ? "enabled" : "disabled");
+    result.success(message);
+  }
+
+  private void readLogFile(Map<String, Object> args, MethodChannel.Result result) {
+    String urlString = (String) args.get("url");
+    String pathnamePrefix = (String) args.get("pathnamePrefix");
+    try {
+        String logContents = Relay.readLogFile(urlString, pathnamePrefix);
+        result.success(logContents);
+    } catch (Exception e) {
+        result.error("READ_LOG_ERROR", e.getMessage(), null);
+    }
+  }
+
+  private void clearLogFile(Map<String, Object> args, MethodChannel.Result result) {
+    String urlString = (String) args.get("url");
+    String pathnamePrefix = (String) args.get("pathnamePrefix");
+    Relay.clearLogFile(urlString, pathnamePrefix);
+    result.success("Log File Cleared");
+  }
+
+  private <T> void sendToRelay(
+      Request<T> request,
+      String[] headerArray,
+      String pathnamePrefix,
+      VolleyRequestListener listener) {
+    relay.addToMteRequestQueue(request, headerArray, pathnamePrefix, new RelayVolleyRequestListener() {
       @Override
-      public void onError(String message, Map<String, List<String>> responseHeaders) {
-        listener.onError(message, responseHeaders);
+      public void onError(NetworkResponse networkResponse, String message, Map<String, List<String>> responseHeaders) {
+        int statusCode = 503;
+        if (networkResponse != null) {
+          statusCode = networkResponse.statusCode;
+        }
+        listener.onError(statusCode, message, responseHeaders);
       }
 
       @Override
-      public void onResponse(byte[] responseBytes, Map<String, List<String>> responseHeaders) {
+      public void onResponse(NetworkResponse networkResponse, byte[] responseBytes,
+          Map<String, List<String>> responseHeaders) {
+        int statusCode = networkResponse.statusCode;
         try {
           String jsonString = new String(responseBytes);
 
           if (jsonString.trim().startsWith("{")) {
             JSONObject jsonObject = new JSONObject(jsonString);
-            listener.onJsonResponse(jsonObject, responseHeaders);
+            listener.onJsonResponse(statusCode, jsonObject, responseHeaders);
           } else if (jsonString.trim().startsWith("[")) {
             JSONArray jsonArray = new JSONArray(jsonString);
-            listener.onJsonArrayResponse(jsonArray, null);
+            listener.onJsonArrayResponse(statusCode, jsonArray, null);
           } else {
-            listener.onError("Response Byte[] contains INVALID JSON", responseHeaders);
+            listener.onError(statusCode, "Response Byte[] contains INVALID JSON", responseHeaders);
           }
         } catch (JSONException e) {
-          listener.onError(e.getMessage(), responseHeaders);
+          listener.onError(statusCode, e.getMessage(), responseHeaders);
         }
-      }
-
-      @Override
-      public void onResponse(JSONObject responseJson, Map<String, List<String>> responseHeaders) {
-        listener.onJsonResponse(responseJson, responseHeaders);
       }
     });
   }
@@ -523,16 +637,17 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
   // UTILITY METHODS
 
   @NonNull
-  private Request<?> createRequest(String body, int method, String urlString, VolleyRequestListener listener, Map<String, String> headers) throws JSONException {
+  private Request<?> createRequest(String body, int method, String urlString, VolleyRequestListener listener,
+      Map<String, String> headers) throws JSONException {
     Request<?> request;
     if (body == null || body.isEmpty()) {
       // Handle null or empty body (create a JSON request with null body)
       request = new JsonObjectRequest(
-              method,
-              urlString,
-              null,
-              response -> listener.onJsonResponse(response, null),
-              error -> listener.onError(error.toString(), null)) {
+          method,
+          urlString,
+          null,
+          response -> listener.onJsonResponse(0, response, null),
+          error -> listener.onError(0, error.toString(), null)) {
 
         @Override
         public Map<String, String> getHeaders() throws AuthFailureError {
@@ -543,11 +658,11 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
       String trimmedBody = body.trim();
       if (trimmedBody.startsWith("{")) {
         request = new JsonObjectRequest(
-                method,
-                urlString,
-                new JSONObject(trimmedBody),
-                response -> listener.onJsonResponse(response, null),
-                error -> listener.onError(error.toString(), null)) {
+            method,
+            urlString,
+            new JSONObject(trimmedBody),
+            response -> listener.onJsonResponse(0, response, null),
+            error -> listener.onError(0, error.toString(), null)) {
 
           @Override
           public Map<String, String> getHeaders() throws AuthFailureError {
@@ -556,11 +671,11 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
         };
       } else if (trimmedBody.startsWith("[")) {
         request = new JsonArrayRequest(
-                method,
-                urlString,
-                new JSONArray(trimmedBody),
-                response -> listener.onJsonArrayResponse(response, null),
-                error -> listener.onError(error.toString(), null)) {
+            method,
+            urlString,
+            new JSONArray(trimmedBody),
+            response -> listener.onJsonArrayResponse(0, response, null),
+            error -> listener.onError(0, error.toString(), null)) {
 
           @Override
           public Map<String, String> getHeaders() throws AuthFailureError {
@@ -569,17 +684,18 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
         };
       } else {
         request = new StringRequest(
-                method,
-                urlString,
-                response -> listener.onStringResponse(response, null),
-                error -> {
-                  String errorMessage = getVolleyErrorString(error);
-                  listener.onError(errorMessage, null);
-                }) {
+            method,
+            urlString,
+            response -> listener.onStringResponse(0, response, null),
+            error -> {
+              String errorMessage = getVolleyErrorString(error);
+              listener.onError(0, errorMessage, null);
+            }) {
           @Override
           public byte[] getBody() {
             return body.getBytes(StandardCharsets.UTF_8);
           }
+
           @Override
           public Map<String, String> getHeaders() throws AuthFailureError {
             return headers;
@@ -600,10 +716,11 @@ public class MteRelayClientPlugin implements FlutterPlugin, MethodCallHandler {
       }
     } catch (IOException e) {
       relayStreamResponseMethod(
-              false,
-              null,
-              e.getMessage(),
-              null);
+          0,
+          false,
+          null,
+          e.getMessage(),
+          null);
     }
   }
 
