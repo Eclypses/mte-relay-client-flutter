@@ -3,7 +3,8 @@
 trigger:
     branches:
       include:
-        - public
+        - master
+        - develop
         
 variables:
     packageName: 'mte-relay-client-flutter'
@@ -14,8 +15,15 @@ pool: 'MacOS - Intel'
 
 steps:
 
+- script: |
+    flutter pub get
+    flutter analyze
+    flutter test --coverage
+  displayName: 'Run tests and analysis'
+  workingDirectory: $(relayDirectory)
+
 - task: InstallSSHKey@0
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/public')
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
   displayName: 'Install the SSH key'
   inputs:
     knownHostsEntry: '$(known_hosts_entry)'
@@ -26,14 +34,15 @@ steps:
   displayName: 'Delete unnecessary files before push to public remote'
   condition: and(
                succeeded(),
-               eq(variables['Build.SourceBranch'], 'refs/heads/public')
+               eq(variables['Build.SourceBranch'], 'refs/heads/master')
              )
   inputs:
     SourceFolder: $(relayDirectory)
     Contents: |
       .gitignore
       **/*.yml
-      UPDATEME.md
+      dev_docs
+      release.sh
 
 - script: |
     git add .
@@ -41,7 +50,7 @@ steps:
   displayName: 'Commit unnecessary file deletion'
   condition: and(
                succeeded(),
-               eq(variables['Build.SourceBranch'], 'refs/heads/public')
+               eq(variables['Build.SourceBranch'], 'refs/heads/master')
              )
   workingDirectory: $(relayDirectory)
 
@@ -49,7 +58,7 @@ steps:
   displayName: 'Push to Public GitHub'
   condition: and(
                succeeded(),
-               eq(variables['Build.SourceBranch'], 'refs/heads/public')
+               eq(variables['Build.SourceBranch'], 'refs/heads/master')
              )
   inputs:
     script: |
