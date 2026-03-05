@@ -8,6 +8,7 @@ REPO_URL="https://github.com/Eclypses/mte-relay-client-flutter"
 PUBSPEC_PATH="pubspec.yaml"
 EXAMPLE_PUBSPEC_PATH="example/pubspec.yaml"
 CHANGELOG_PATH="CHANGELOG.md"
+README_PATH="README.md"
 BRANCH="develop"
 # ---------------------
 
@@ -35,7 +36,11 @@ sed -i '' "s/^version: .*/version: $CLEAN_VERSION/" "$PUBSPEC_PATH"
 echo "📝 Updating $EXAMPLE_PUBSPEC_PATH..."
 sed -i '' "s/ref: .*/ref: $CLEAN_VERSION/" "$EXAMPLE_PUBSPEC_PATH"
 
-# 4. Update CHANGELOG.md Headers
+# 4. Update README.md git ref
+echo "📝 Updating $README_PATH..."
+sed -i '' "s/ref: .*/ref: $CLEAN_VERSION/" "$README_PATH"
+
+# 5. Update CHANGELOG.md Headers
 # NOTE: Requires a '## [Unreleased]' section in your CHANGELOG.md to work.
 echo "📝 Updating $CHANGELOG_PATH..."
 SEARCH="## \[Unreleased\]"
@@ -65,7 +70,7 @@ echo "$NEW_LINK" >> "$CHANGELOG_PATH"
 # 6. Git Operations
 echo ""
 echo "📦 Committing changes..."
-git add "$PUBSPEC_PATH" "$EXAMPLE_PUBSPEC_PATH" "$CHANGELOG_PATH"
+git add "$PUBSPEC_PATH" "$EXAMPLE_PUBSPEC_PATH" "$README_PATH" "$CHANGELOG_PATH"
 git commit -m "chore: bump version to $CLEAN_VERSION"
 
 # 7. Create Git Tag

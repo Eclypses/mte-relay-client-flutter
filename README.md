@@ -67,7 +67,7 @@ dependencies:
   mte_relay_client_plugin:
     git:
       url: https://github.com/Eclypses/mte-relay-client-flutter.git
-      ref: 4.3.1
+      ref: 4.3.0
 \`\`\`
 
 > ⚠️ **iOS Requirement:** This plugin requires iOS 14.0 or greater. In your Xcode project, search for \`IPHONEOS_DEPLOYMENT_TARGET\` and ensure it is set to 14.0 or higher in all locations.

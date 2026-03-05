@@ -5,25 +5,19 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
--
+- Comprehensive Dart test suite across response models, platform interface, method channel bridge, and public API delegation
+- Reusable test fixtures and fake platform helpers under `test/fixtures` and `test/helpers`
+- Testing guide in `dev_docs/TESTING_SUMMARY.md`
 
 ### Changed
--
+- Azure pipeline aligned to shared plugin pattern: run analyze + tests with coverage on `develop` and `master`
+- Release workflow script updated to also bump README git ref and include README in release commit set
+- Dart SDK constraints normalized from dev SDK pins to stable-compatible constraints in root and example pubspec files
 
 ### Fixed
--
-
-
-## [4.3.0] - 2026-01-22
-
-### Added
--
-
-### Changed
--
-
-### Fixed
--
+- Removed duplicate `4.3.0` section and duplicate reference entry in changelog
+- Corrected malformed changelog release links (including `4.2.8`, `4.2.9`) and standardized tag link format
+- Synced README dependency example version ref to current plugin version
 
 
 ## [4.3.0] - 2026-01-22
@@ -171,18 +165,12 @@ All notable changes to this project will be documented in this file.
 [4.2.1]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.1
 [4.2.2]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.2
 [4.2.3]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.3
-[4.2.4]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/4.2.4
-[4.2.5]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/4.2.5
-[4.2.6]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/4.2.6
-[4.2.7]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/4.2.7
-[4.2.8]: https://github.com/Eclypses/emte-relay-client-flutterreleases/tag/4.2.8
-[4.2.9]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v
-[4.2.10]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/4.2.10
+[4.2.4]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.4
+[4.2.5]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.5
+[4.2.6]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.6
+[4.2.7]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.7
+[4.2.8]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.8
+[4.2.9]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.9
+[4.2.10]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.10
 [4.2.11]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.11
-
-
-
-
-[4.3.0]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.3.0
-
 [4.3.0]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.3.0
