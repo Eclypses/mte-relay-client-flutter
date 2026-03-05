@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+-
+
+### Changed
+-
+
+### Fixed
+-
+
+
+## [4.4.0] - 2026-03-05
+
+### Added
 - Comprehensive Dart test suite across response models, platform interface, method channel bridge, and public API delegation
 - Reusable test fixtures and fake platform helpers under `test/fixtures` and `test/helpers`
 - Testing guide in `dev_docs/TESTING_SUMMARY.md`
@@ -174,3 +186,5 @@ All notable changes to this project will be documented in this file.
 [4.2.10]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.10
 [4.2.11]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.2.11
 [4.3.0]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.3.0
+
+[4.4.0]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.4.0
