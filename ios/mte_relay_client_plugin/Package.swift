@@ -6,20 +6,20 @@ import PackageDescription
 let package = Package(
     name: "mte_relay_client_plugin",
     platforms: [
-        .iOS("14.0")
+        .iOS("16.0")
     ],
     products: [
         .library(name: "mte-relay-client-plugin",
                  targets: ["mte_relay_client_plugin"])
     ],
     dependencies: [
-       .package(url: "https://github.com/Eclypses/eclypses-aws-mte-relay-client-ios.git", from: "4.3.4")
+       .package(url: "https://github.com/Eclypses/mte-relay-client-ios.git", from: "4.6.0")
           ],
     targets: [
         .target(
             name: "mte_relay_client_plugin",
             dependencies: [
-                .product(name: "MteRelay", package: "eclypses-aws-mte-relay-client-ios")
+                .product(name: "MteRelay", package: "mte-relay-client-ios")
             ],
             resources: [
                 // If your plugin requires a privacy manifest, for example if it uses any required
