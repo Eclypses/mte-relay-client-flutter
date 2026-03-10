@@ -14,6 +14,20 @@ All notable changes to this project will be documented in this file.
 -
 
 
+## [4.5.0] - 2026-03-10
+
+### Added
+-
+
+### Changed
+- Migrated iOS Swift package dependency from `eclypses-aws-mte-relay-client-ios` to `mte-relay-client-ios` and updated to `4.6.0`
+- Updated iOS plugin minimum deployment target to `iOS 16.0`
+- Updated example app default relay server URL to `https://mte-relay-demo-relay-server.eclypses.com`
+
+### Fixed
+-
+
+
 ## [4.4.0] - 2026-03-05
 
 ### Added
@@ -188,3 +202,5 @@ All notable changes to this project will be documented in this file.
 [4.3.0]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.3.0
 
 [4.4.0]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.4.0
+
+[4.5.0]: https://github.com/Eclypses/mte-relay-client-flutter/releases/tag/v4.5.0
